@@ -1,0 +1,9 @@
+<svg width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="420" height="360" rx="32" fill="#F4EDE4"/>
+<circle cx="320" cy="70" r="52" fill="#C99B58" opacity="0.16"/>
+<circle cx="86" cy="285" r="62" fill="#101216" opacity="0.06"/>
+<path d="M155 98L193 72H227L265 98L300 294H246L236 152V306H184V152L174 294H120L155 98Z" fill="#17213A"/>
+<path d="M193 72L210 134L227 72H193Z" fill="#C99B58"/>
+<path d="M210 134V306" stroke="#C99B58" stroke-width="6"/>
+<text x="210" y="340" fill="#6D6257" font-family="Arial" font-size="18" font-weight="700" text-anchor="middle">Bomber Jacket</text>
+</svg>

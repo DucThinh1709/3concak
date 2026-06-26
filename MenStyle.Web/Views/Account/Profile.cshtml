@@ -1,0 +1,46 @@
+@model MenStyle.Web.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Tài khoản cá nhân";
+}
+
+<main class="auth-page">
+    <section class="profile-card">
+        <p class="eyebrow">Customer Profile</p>
+        <h1>Thông tin tài khoản</h1>
+        <p class="profile-note">Dữ liệu bên dưới được đọc trực tiếp từ SQL Server bảng <strong>AspNetUsers</strong>.</p>
+
+        <div class="profile-grid">
+            <div>
+                <span>Họ tên</span>
+                <strong>@Model.FullName</strong>
+            </div>
+            <div>
+                <span>Email</span>
+                <strong>@Model.Email</strong>
+            </div>
+            <div>
+                <span>Số điện thoại</span>
+                <strong>@Model.PhoneNumber</strong>
+            </div>
+            <div>
+                <span>Địa chỉ</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.Address) ? "Chưa cập nhật" : Model.Address)</strong>
+            </div>
+            <div>
+                <span>Ngày tạo</span>
+                <strong>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+            </div>
+            <div>
+                <span>Mã UserId</span>
+                <strong class="small-id">@Model.Id</strong>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a class="btn btn-outline" asp-controller="Home" asp-action="Index">Về trang chủ</a>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="btn btn-primary">Đăng xuất</button>
+            </form>
+        </div>
+    </section>
+</main>

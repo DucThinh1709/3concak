@@ -1,0 +1,16 @@
+<svg width="520" height="620" viewBox="0 0 520 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="520" height="620" rx="34" fill="url(#g)"/>
+<circle cx="105" cy="90" r="72" fill="#C99B58" opacity="0.22"/>
+<circle cx="430" cy="120" r="96" fill="#FFFFFF" opacity="0.08"/>
+<path d="M156 560C166 422 178 308 215 252H305C342 310 360 425 373 560H156Z" fill="#E8DDD0"/>
+<path d="M204 260L158 318L190 360L225 298L204 260Z" fill="#C99B58"/>
+<path d="M316 260L362 318L330 360L295 298L316 260Z" fill="#C99B58"/>
+<path d="M208 252H312L294 424H226L208 252Z" fill="#101216"/>
+<path d="M224 252C232 278 248 292 260 292C272 292 288 278 296 252H224Z" fill="#F1D1AD"/>
+<circle cx="260" cy="184" r="58" fill="#F1D1AD"/>
+<path d="M198 178C202 122 241 96 291 112C326 123 344 151 340 192C313 166 275 166 238 172C222 175 210 178 198 178Z" fill="#15171D"/>
+<path d="M234 206C251 220 274 220 291 206" stroke="#15171D" stroke-width="6" stroke-linecap="round"/>
+<path d="M215 455H305V560H215V455Z" fill="#2D3647"/>
+<path d="M156 560H373L382 620H147L156 560Z" fill="#15171D"/>
+<defs><linearGradient id="g" x1="0" y1="0" x2="520" y2="620" gradientUnits="userSpaceOnUse"><stop stop-color="#343C4E"/><stop offset="1" stop-color="#111318"/></linearGradient></defs>
+</svg>

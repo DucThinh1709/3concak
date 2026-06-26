@@ -1,0 +1,9 @@
+<svg width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="420" height="360" rx="32" fill="#F4EDE4"/>
+<circle cx="320" cy="70" r="52" fill="#C99B58" opacity="0.16"/>
+<circle cx="86" cy="285" r="62" fill="#101216" opacity="0.06"/>
+<path d="M165 75H255L270 310H225L210 165L195 310H150L165 75Z" fill="#283A5B"/>
+<path d="M165 75H255V112H165V75Z" fill="#A9BDD7" opacity="0.55"/>
+<path d="M210 112V165" stroke="#A9BDD7" stroke-width="6"/>
+<text x="210" y="340" fill="#6D6257" font-family="Arial" font-size="18" font-weight="700" text-anchor="middle">Slim Jeans</text>
+</svg>

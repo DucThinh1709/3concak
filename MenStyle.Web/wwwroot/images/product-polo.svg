@@ -1,0 +1,9 @@
+<svg width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="420" height="360" rx="32" fill="#F4EDE4"/>
+<circle cx="320" cy="70" r="52" fill="#C99B58" opacity="0.16"/>
+<circle cx="86" cy="285" r="62" fill="#101216" opacity="0.06"/>
+<path d="M130 110L185 78H235L290 110L260 170L235 156V306H185V156L160 170L130 110Z" fill="#365B43"/>
+<path d="M190 78C196 96 224 96 230 78H190Z" fill="#EAD8B5"/>
+<circle cx="210" cy="185" r="28" fill="#EAD8B5" opacity="0.18"/>
+<text x="210" y="340" fill="#6D6257" font-family="Arial" font-size="18" font-weight="700" text-anchor="middle">Premium Polo</text>
+</svg>

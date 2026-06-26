@@ -1,0 +1,9 @@
+<svg width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="420" height="360" rx="32" fill="#F4EDE4"/>
+<circle cx="320" cy="70" r="52" fill="#C99B58" opacity="0.16"/>
+<circle cx="86" cy="285" r="62" fill="#101216" opacity="0.06"/>
+<path d="M140 95L190 70H230L280 95L250 160L232 150V300H188V150L170 160L140 95Z" fill="#FFFFFF"/>
+<path d="M190 70C198 92 222 92 230 70H190Z" fill="#C99B58"/>
+<path d="M188 150H232" stroke="#C99B58" stroke-width="6" opacity="0.8"/>
+<text x="210" y="340" fill="#6D6257" font-family="Arial" font-size="18" font-weight="700" text-anchor="middle">Oxford Shirt</text>
+</svg>
