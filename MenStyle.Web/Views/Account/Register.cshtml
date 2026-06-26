@@ -1,50 +1,81 @@
-@model MenStyle.Web.ViewModels.Auth.RegisterViewModel
+@model MenStyle.Web.ViewModels.RegisterViewModel
+
 @{
-    ViewData["Title"] = "Đăng ký tài khoản";
-    var returnUrl = ViewData["ReturnUrl"] as string;
+    ViewData["Title"] = "Đăng ký";
 }
 
-<main class="auth-page">
-    <section class="auth-card">
-        <div class="auth-intro">
-            <p class="eyebrow">MENSTYLE Account</p>
-            <h1>Tạo tài khoản khách hàng</h1>
-            <p>Thông tin đăng ký sẽ được lưu vào SQL Server trong bảng <strong>AspNetUsers</strong> thông qua ASP.NET Core Identity.</p>
+<section class="auth-section">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Đăng ký</h1>
+            <p>Tạo tài khoản để mua sắm tại MENSTYLE.</p>
         </div>
 
-        <form asp-action="Register" asp-route-returnUrl="@returnUrl" method="post" class="auth-form">
-            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <form asp-action="Register" asp-controller="Account" method="post">
+            @Html.AntiForgeryToken()
 
-            <label asp-for="FullName"></label>
-            <input asp-for="FullName" placeholder="Nguyễn Văn A" />
-            <span asp-validation-for="FullName" class="field-validation"></span>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <label asp-for="Email"></label>
-            <input asp-for="Email" placeholder="customer@gmail.com" />
-            <span asp-validation-for="Email" class="field-validation"></span>
+            <div class="form-group">
+                <label asp-for="FullName"></label>
+                <input asp-for="FullName"
+                       class="form-control"
+                       placeholder="Nhập họ và tên" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
 
-            <label asp-for="PhoneNumber"></label>
-            <input asp-for="PhoneNumber" placeholder="0909123456" />
-            <span asp-validation-for="PhoneNumber" class="field-validation"></span>
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email"
+                       class="form-control"
+                       placeholder="Nhập email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
 
-            <label asp-for="Address"></label>
-            <input asp-for="Address" placeholder="Địa chỉ nhận hàng" />
-            <span asp-validation-for="Address" class="field-validation"></span>
+            <div class="form-group">
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber"
+                       class="form-control"
+                       placeholder="Nhập số điện thoại" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
 
-            <label asp-for="Password"></label>
-            <input asp-for="Password" placeholder="Ví dụ: abc123" />
-            <span asp-validation-for="Password" class="field-validation"></span>
+            <div class="form-group">
+                <label asp-for="Address"></label>
+                <input asp-for="Address"
+                       class="form-control"
+                       placeholder="Nhập địa chỉ giao hàng" />
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
 
-            <label asp-for="ConfirmPassword"></label>
-            <input asp-for="ConfirmPassword" placeholder="Nhập lại mật khẩu" />
-            <span asp-validation-for="ConfirmPassword" class="field-validation"></span>
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password"
+                       class="form-control"
+                       placeholder="Nhập mật khẩu" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
 
-            <button type="submit" class="btn btn-primary full">Đăng ký</button>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword"></label>
+                <input asp-for="ConfirmPassword"
+                       class="form-control"
+                       placeholder="Nhập lại mật khẩu" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
 
-            <p class="auth-switch">
-                Đã có tài khoản?
-                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@returnUrl">Đăng nhập ngay</a>
-            </p>
+            <button type="submit" class="btn-auth">
+                Đăng ký
+            </button>
         </form>
-    </section>
-</main>
+
+        <div class="auth-footer">
+            <span>Đã có tài khoản?</span>
+            <a asp-controller="Account" asp-action="Login">Đăng nhập</a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

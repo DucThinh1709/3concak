@@ -1,153 +1,197 @@
+using MenStyle.Web.Data;
 using MenStyle.Web.Models;
-using MenStyle.Web.ViewModels.Auth;
+using MenStyle.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace MenStyle.Web.Controllers;
-
-public class AccountController : Controller
+namespace MenStyle.Web.Controllers
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
-
-    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    public class AccountController : Controller
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-    }
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-    [HttpGet]
-    public IActionResult Register(string? returnUrl = null)
-    {
-        ViewData["ReturnUrl"] = returnUrl;
-        return View(new RegisterViewModel());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model, string? returnUrl = null)
-    {
-        ViewData["ReturnUrl"] = returnUrl;
-
-        if (!ModelState.IsValid)
+        public AccountController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
         {
+            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            string normalizedPhone = NormalizePhoneNumber(model.PhoneNumber);
+
+            var emailExists = await _userManager.FindByEmailAsync(model.Email);
+            if (emailExists != null)
+            {
+                ModelState.AddModelError("Email", "Email này đã được sử dụng.");
+                return View(model);
+            }
+
+            var phoneExists = await _context.Users
+                .AnyAsync(u => u.PhoneNumber == normalizedPhone);
+
+            if (phoneExists)
+            {
+                ModelState.AddModelError("PhoneNumber", "Số điện thoại này đã được sử dụng.");
+                return View(model);
+            }
+
+            var user = new ApplicationUser
+            {
+                FullName = model.FullName,
+                UserName = model.Email,
+                Email = model.Email,
+                PhoneNumber = normalizedPhone,
+                Address = model.Address,
+                CreatedAt = DateTime.Now
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToAction("Index", "Home");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
             return View(model);
         }
 
-        var user = new ApplicationUser
+        [HttpGet]
+        public IActionResult Login(string? returnUrl = null)
         {
-            UserName = model.Email,
-            Email = model.Email,
-            EmailConfirmed = true,
-            FullName = model.FullName,
-            PhoneNumber = model.PhoneNumber,
-            Address = model.Address,
-            CreatedAt = DateTime.Now
-        };
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
 
-        var result = await _userManager.CreateAsync(user, model.Password);
-        if (result.Succeeded)
-        {
-            await _userManager.AddToRoleAsync(user, "Customer");
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            TempData["SuccessMessage"] = "Đăng ký tài khoản thành công. Tài khoản đã được lưu vào SQL Server.";
-            return RedirectToLocal(returnUrl);
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
         }
 
-        foreach (var error in result.Errors)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            ModelState.AddModelError(string.Empty, TranslateIdentityError(error.Description));
-        }
+            ViewData["ReturnUrl"] = returnUrl;
 
-        return View(model);
-    }
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
 
-    [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
-    {
-        ViewData["ReturnUrl"] = returnUrl;
-        return View(new LoginViewModel());
-    }
+            ApplicationUser? user;
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
-    {
-        ViewData["ReturnUrl"] = returnUrl;
+            string loginValue = model.LoginIdentifier.Trim();
 
-        if (!ModelState.IsValid)
-        {
+            if (loginValue.Contains("@"))
+            {
+                user = await _userManager.FindByEmailAsync(loginValue);
+            }
+            else
+            {
+                string normalizedPhone = NormalizePhoneNumber(loginValue);
+
+                user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == normalizedPhone);
+            }
+
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Email, số điện thoại hoặc mật khẩu không đúng.");
+                return View(model);
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                user,
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: false
+            );
+
+            if (result.Succeeded)
+            {
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError("", "Email, số điện thoại hoặc mật khẩu không đúng.");
             return View(model);
         }
 
-        var result = await _signInManager.PasswordSignInAsync(
-            model.Email,
-            model.Password,
-            model.RememberMe,
-            lockoutOnFailure: false);
-
-        if (result.Succeeded)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            TempData["SuccessMessage"] = "Đăng nhập thành công.";
-            return RedirectToLocal(returnUrl);
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            return View(user);
         }
 
-        ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
-        return View(model);
-    }
-
-    [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> Profile()
-    {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
         {
-            return RedirectToAction(nameof(Login));
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
         }
 
-        return View(user);
-    }
-
-    [Authorize]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
-    {
-        await _signInManager.SignOutAsync();
-        TempData["SuccessMessage"] = "Bạn đã đăng xuất.";
-        return RedirectToAction("Index", "Home");
-    }
-
-    [HttpGet]
-    public IActionResult AccessDenied()
-    {
-        return View();
-    }
-
-    private IActionResult RedirectToLocal(string? returnUrl)
-    {
-        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        [HttpGet]
+        public IActionResult AccessDenied()
         {
-            return LocalRedirect(returnUrl);
+            return View();
         }
 
-        return RedirectToAction("Index", "Home");
-    }
-
-    private static string TranslateIdentityError(string error)
-    {
-        if (error.Contains("is already taken", StringComparison.OrdinalIgnoreCase))
+        private static string NormalizePhoneNumber(string phoneNumber)
         {
-            return "Email này đã được đăng ký.";
+            return phoneNumber
+                .Replace(" ", "")
+                .Replace("-", "")
+                .Replace(".", "")
+                .Replace("(", "")
+                .Replace(")", "")
+                .Trim();
         }
-
-        if (error.Contains("Passwords must", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Mật khẩu chưa đủ mạnh. Hãy dùng tối thiểu 6 ký tự, có chữ và số.";
-        }
-
-        return error;
     }
 }
