@@ -99,7 +99,16 @@
                                 <strong>@FormatPrice(product.Price)</strong>
                                 <span>@FormatPrice(product.OldPrice)</span>
                             </div>
-                            <button class="add-cart" type="button">Thêm vào giỏ</button>
+                            <form asp-controller="Cart"
+                                  asp-action="Add"
+                                  asp-route-id="@product.Id"
+                                  method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="returnUrl"
+                                       value="@($"{Context.Request.Path}{Context.Request.QueryString}#products")" />
+                                <button class="add-cart" type="submit">Thêm vào giỏ</button>
+                            </form>
                         </div>
                     </article>
                 }

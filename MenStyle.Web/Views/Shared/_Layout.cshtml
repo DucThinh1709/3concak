@@ -1,10 +1,14 @@
 @using MenStyle.Web.Models
 @using Microsoft.AspNetCore.Identity
+@using MenStyle.Web.Extensions
+@using MenStyle.Web.ViewModels
 @inject UserManager<ApplicationUser> UserManager
 @{
     var currentUser = User.Identity?.IsAuthenticated == true
         ? await UserManager.GetUserAsync(User)
         : null;
+    var cartItems = Context.Session.GetJson<List<CartItemViewModel>>("MENSTYLE_CART") ?? [];
+    var cartQuantity = cartItems.Sum(x => x.Quantity);
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -35,7 +39,9 @@
             </div>
             <div class="nav-actions">
                 <button class="search-btn" type="button">Tìm kiếm</button>
-                <button class="cart-btn" type="button">Giỏ hàng <span id="cartCount">0</span></button>
+                <a class="cart-btn" asp-controller="Cart" asp-action="Index">
+                    Giỏ hàng <span id="cartCount">@cartQuantity</span>
+                </a>
 
                 @if (currentUser is not null)
                 {

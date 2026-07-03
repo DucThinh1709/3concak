@@ -4,49 +4,91 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-<section class="auth-section">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h1>Đăng nhập</h1>
-            <p>Đăng nhập để mua sắm và quản lý đơn hàng của bạn.</p>
+<section class="auth-page">
+    <div class="auth-shell">
+        <div class="auth-visual">
+            <a class="auth-logo" asp-controller="Home" asp-action="Index">
+                MEN<span>STYLE</span>
+            </a>
+
+            <div class="auth-visual-content">
+                <p class="eyebrow">Welcome Back</p>
+                <h1>Đăng nhập để tiếp tục mua sắm</h1>
+                <p>
+                    Theo dõi đơn hàng, lưu thông tin giao hàng và nhận ưu đãi mới nhất từ MENSTYLE.
+                </p>
+            </div>
+
+            <div class="auth-benefits">
+                <div>
+                    <strong>01</strong>
+                    <span>Mua hàng nhanh hơn</span>
+                </div>
+                <div>
+                    <strong>02</strong>
+                    <span>Theo dõi đơn hàng</span>
+                </div>
+                <div>
+                    <strong>03</strong>
+                    <span>Ưu đãi thành viên</span>
+                </div>
+            </div>
         </div>
 
-        <form asp-action="Login" asp-controller="Account" method="post">
-            @Html.AntiForgeryToken()
-
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-
-            <div class="form-group">
-                <label asp-for="LoginIdentifier"></label>
-                <input asp-for="LoginIdentifier"
-                       class="form-control"
-                       placeholder="Nhập email hoặc số điện thoại" />
-                <span asp-validation-for="LoginIdentifier" class="text-danger"></span>
+        <div class="auth-panel">
+            <div class="auth-header">
+                <p>Xin chào!</p>
+                <h2>Đăng nhập tài khoản</h2>
+                <span>Nhập email hoặc số điện thoại để đăng nhập.</span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Password"></label>
-                <input asp-for="Password"
-                       class="form-control"
-                       placeholder="Nhập mật khẩu" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+            <form asp-action="Login" asp-controller="Account" method="post" class="auth-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger validation-box"></div>
+
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                <div class="form-group">
+                    <label asp-for="LoginIdentifier"></label>
+                    <div class="input-icon">
+                        <span>✉</span>
+                        <input asp-for="LoginIdentifier"
+                               class="form-control"
+                               placeholder="Email hoặc số điện thoại" />
+                    </div>
+                    <span asp-validation-for="LoginIdentifier" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password"></label>
+                    <div class="input-icon">
+                        <span>🔒</span>
+                        <input asp-for="Password"
+                               class="form-control"
+                               placeholder="Mật khẩu" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="auth-options">
+                    <label class="remember-box">
+                        <input asp-for="RememberMe" />
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+
+                    <a href="#">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="btn-auth">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <span>Chưa có tài khoản?</span>
+                <a asp-controller="Account" asp-action="Register">Đăng ký ngay</a>
             </div>
-
-            <div class="form-check mb-3">
-                <input asp-for="RememberMe" class="form-check-input" />
-                <label asp-for="RememberMe" class="form-check-label"></label>
-            </div>
-
-            <button type="submit" class="btn-auth">
-                Đăng nhập
-            </button>
-        </form>
-
-        <div class="auth-footer">
-            <span>Chưa có tài khoản?</span>
-            <a asp-controller="Account" asp-action="Register">Đăng ký ngay</a>
         </div>
     </div>
 </section>
