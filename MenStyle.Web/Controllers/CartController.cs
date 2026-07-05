@@ -1,13 +1,27 @@
-﻿using MenStyle.Web.Extensions;
+﻿using MenStyle.Web.Data;
+using MenStyle.Web.Extensions;
 using MenStyle.Web.Models;
 using MenStyle.Web.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MenStyle.Web.Controllers;
 
 public class CartController : Controller
 {
     private const string CartSessionKey = "MENSTYLE_CART";
+
+    private readonly ApplicationDbContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public CartController(
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager)
+    {
+        _context = context;
+        _userManager = userManager;
+    }
 
     public IActionResult Index()
     {
@@ -23,9 +37,11 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Add(int id, string? returnUrl = null)
+    public async Task<IActionResult> Add(int id, string? returnUrl = null)
     {
-        var product = ProductCatalog.FindById(id);
+        var product = await _context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
 
         if (product == null)
         {
@@ -135,7 +151,7 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Checkout()
+    public async Task<IActionResult> Checkout()
     {
         var cart = GetCart();
 
@@ -145,9 +161,39 @@ public class CartController : Controller
             return RedirectToAction("Index");
         }
 
+        ApplicationUser? user = null;
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            user = await _userManager.GetUserAsync(User);
+        }
+
+        var order = new CustomerOrder
+        {
+            OrderCode = "MS" + DateTime.Now.ToString("yyyyMMddHHmmss"),
+            UserId = user?.Id,
+            CustomerName = user?.FullName ?? "Khách vãng lai",
+            PhoneNumber = user?.PhoneNumber ?? "",
+            ShippingAddress = user?.Address ?? "",
+            Status = "Chờ xác nhận",
+            CreatedAt = DateTime.Now,
+            TotalAmount = cart.Sum(x => x.LineTotal),
+            Items = cart.Select(x => new CustomerOrderItem
+            {
+                ProductId = x.ProductId,
+                ProductName = x.ProductName,
+                Price = x.Price,
+                Quantity = x.Quantity,
+                LineTotal = x.LineTotal
+            }).ToList()
+        };
+
+        _context.CustomerOrders.Add(order);
+        await _context.SaveChangesAsync();
+
         HttpContext.Session.Remove(CartSessionKey);
 
-        TempData["SuccessMessage"] = "Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại MENSTYLE!";
+        TempData["SuccessMessage"] = $"Đặt hàng thành công. Mã đơn hàng của bạn là {order.OrderCode}.";
 
         return RedirectToAction("Index", "Home");
     }
