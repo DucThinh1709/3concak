@@ -1,0 +1,153 @@
+﻿@model MenStyle.Web.ViewModels.ProductListViewModel
+
+@{
+    ViewData["Title"] = "Sản phẩm";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+}
+
+<main class="product-page">
+
+    <section class="product-hero section-padding">
+        <div class="container">
+            <div class="product-hero-content">
+                <p class="eyebrow">MENSTYLE SHOP</p>
+
+                <h1>Sản phẩm thời trang nam</h1>
+
+                <p>
+                    Khám phá các mẫu áo thun, áo sơ mi, quần nam và áo khoác được chọn lọc
+                    dành riêng cho phong cách nam hiện đại.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="products section-padding product-category-section">
+        <div class="container">
+
+            <div class="section-head product-page-head">
+                <div class="section-title left">
+                    <p>Danh mục</p>
+                    <h2>Mua theo loại sản phẩm</h2>
+                </div>
+
+                <form asp-controller="Home"
+                      asp-action="SanPham"
+                      method="get"
+                      class="toolbar product-toolbar">
+
+                    <input type="hidden" name="category" value="@Model.SelectedCategory" />
+
+                    <select name="sort" onchange="this.form.submit()">
+                        <option value="default" selected="@(Model.SortOrder == "default" ? "selected" : null)">
+                            Sắp xếp mặc định
+                        </option>
+
+                        <option value="price-asc" selected="@(Model.SortOrder == "price-asc" ? "selected" : null)">
+                            Giá thấp đến cao
+                        </option>
+
+                        <option value="price-desc" selected="@(Model.SortOrder == "price-desc" ? "selected" : null)">
+                            Giá cao đến thấp
+                        </option>
+                    </select>
+                </form>
+            </div>
+
+            <div class="category-grid product-category-grid">
+                @foreach (var category in Model.Categories)
+                {
+                    <a class="category-card @(category.IsActive ? "active" : "")"
+                       asp-controller="Home"
+                       asp-action="SanPham"
+                       asp-route-category="@category.Filter"
+                       asp-route-sort="@Model.SortOrder">
+
+                        <span>@category.Number</span>
+
+                        <h3>@category.Name</h3>
+
+                        <p>@category.Description</p>
+                    </a>
+                }
+            </div>
+
+        </div>
+    </section>
+
+    <section class="products section-padding product-list-section">
+        <div class="container">
+
+            <div class="section-head">
+                <div class="section-title left">
+                    <p>Sản phẩm</p>
+                    <h2>Danh sách sản phẩm</h2>
+                </div>
+
+                <p class="product-count">
+                    Tìm thấy @Model.Products.Count sản phẩm
+                </p>
+            </div>
+
+            @if (!Model.Products.Any())
+            {
+                <div class="empty-state">
+                    <h3>Không tìm thấy sản phẩm</h3>
+                    <p>Vui lòng chọn danh mục khác.</p>
+                </div>
+            }
+            else
+            {
+                <div class="product-grid">
+                    @foreach (var product in Model.Products)
+                    {
+                        <article class="product-card"
+                                 data-category="@product.CategorySlug"
+                                 data-name="@product.Name"
+                                 data-price="@product.Price">
+
+                            <div class="product-img">
+                                <img src="@product.ImageUrl" alt="@product.AltText" />
+                            </div>
+
+                            <div class="product-info">
+                                <p class="tag">@product.CategoryName</p>
+
+                                <h3>@product.Name</h3>
+
+                                <div class="price-row">
+                                    <strong>@FormatPrice(product.Price)</strong>
+                                    <span>@FormatPrice(product.OldPrice)</span>
+                                </div>
+
+                                <form asp-controller="Cart"
+                                      asp-action="Add"
+                                      asp-route-id="@product.Id"
+                                      method="post">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="id" value="@product.Id" />
+
+                                    <input type="hidden"
+                                           name="returnUrl"
+                                           value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
+
+                                    <button class="add-cart" type="submit">
+                                        Thêm vào giỏ
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+
+        </div>
+    </section>
+
+</main>

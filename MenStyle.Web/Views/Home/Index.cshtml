@@ -1,11 +1,7 @@
 @model HomeViewModel
+
 @{
     ViewData["Title"] = "Demo Website Bán Quần Áo Nam";
-
-    string FormatPrice(decimal price)
-    {
-        return $"{price:N0}đ".Replace(",", ".");
-    }
 }
 
 <main>
@@ -13,30 +9,57 @@
         <div class="container hero-grid">
             <div class="hero-content">
                 <p class="eyebrow">New Collection 2026</p>
+
                 <h1>Thời trang nam hiện đại, lịch lãm và cá tính</h1>
+
                 <p class="hero-desc">
-                    Demo website bán quần áo nam với bố cục thương mại điện tử: danh mục,
-                    sản phẩm nổi bật, giỏ hàng, checkout và khu vực quản trị.
+                    Demo website bán quần áo nam với bố cục thương mại điện tử:
+                    trang chủ giới thiệu thương hiệu, trang sản phẩm riêng, giỏ hàng,
+                    checkout và khu vực quản trị.
                 </p>
+
                 <div class="hero-actions">
-                    <a class="btn btn-primary" href="#products">Mua ngay</a>
-                    <a class="btn btn-outline" href="#collection">Xem bộ sưu tập</a>
+                    <a class="btn btn-primary"
+                       asp-controller="Home"
+                       asp-action="SanPham">
+                        Mua ngay
+                    </a>
+
+                    <a class="btn btn-outline" href="#collection">
+                        Xem bộ sưu tập
+                    </a>
                 </div>
+
                 <div class="hero-stats">
-                    <div><strong>120+</strong><span>Mẫu sản phẩm</span></div>
-                    <div><strong>4.8/5</strong><span>Đánh giá</span></div>
-                    <div><strong>24h</strong><span>Giao nội thành</span></div>
+                    <div>
+                        <strong>120+</strong>
+                        <span>Mẫu sản phẩm</span>
+                    </div>
+
+                    <div>
+                        <strong>4.8/5</strong>
+                        <span>Đánh giá</span>
+                    </div>
+
+                    <div>
+                        <strong>24h</strong>
+                        <span>Giao nội thành</span>
+                    </div>
                 </div>
             </div>
 
             <div class="hero-card">
                 <div class="hero-image-frame">
-                    <img src="~/images/hero-fashion.svg" alt="Nam mặc thời trang hiện đại" asp-append-version="true" />
+                    <img src="~/images/hero-fashion.svg"
+                         alt="Nam mặc thời trang hiện đại"
+                         asp-append-version="true" />
                 </div>
+
                 <div class="floating-card sale-card">
                     <span>Flash Sale</span>
                     <strong>-30%</strong>
                 </div>
+
                 <div class="floating-card style-card">
                     <span>Style</span>
                     <strong>Smart Casual</strong>
@@ -45,73 +68,37 @@
         </div>
     </section>
 
-    <section class="categories section-padding">
+    <section class="home-intro section-padding">
         <div class="container">
             <div class="section-title">
-                <p>Danh mục</p>
-                <h2>Mua theo phong cách của bạn</h2>
+                <p>MenStyle Shop</p>
+                <h2>Trang chủ giới thiệu tổng quan cửa hàng</h2>
             </div>
 
-            <div class="category-grid">
-                @foreach (var category in Model.Categories)
-                {
-                    <article class="category-card @(category.IsActive ? "active" : "")" data-filter="@category.Filter">
-                        <span>@category.Number</span>
-                        <h3>@category.Name</h3>
-                        <p>@category.Description</p>
-                    </article>
-                }
-            </div>
-        </div>
-    </section>
-
-    <section id="products" class="products section-padding">
-        <div class="container">
-            <div class="section-head">
-                <div class="section-title left">
-                    <p>Sản phẩm</p>
-                    <h2>Sản phẩm nổi bật</h2>
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <span>Phong cách</span>
+                    <strong>Modern</strong>
+                    <p>Thiết kế dành cho nam giới trẻ trung, lịch lãm và năng động.</p>
                 </div>
-                <div class="toolbar">
-                    <input id="searchInput" type="search" placeholder="Tìm áo thun, sơ mi..." />
-                    <select id="sortSelect">
-                        <option value="default">Sắp xếp mặc định</option>
-                        <option value="low-high">Giá thấp đến cao</option>
-                        <option value="high-low">Giá cao đến thấp</option>
-                    </select>
-                </div>
-            </div>
 
-            <div id="productGrid" class="product-grid">
-                @foreach (var product in Model.Products)
-                {
-                    <article class="product-card"
-                             data-category="@product.CategorySlug"
-                             data-name="@product.Name"
-                             data-price="@product.Price">
-                        <div class="product-img">
-                            <img src="@product.ImageUrl" alt="@product.AltText" />
-                        </div>
-                        <div class="product-info">
-                            <p class="tag">@product.CategoryName</p>
-                            <h3>@product.Name</h3>
-                            <div class="price-row">
-                                <strong>@FormatPrice(product.Price)</strong>
-                                <span>@FormatPrice(product.OldPrice)</span>
-                            </div>
-                            <form asp-controller="Cart"
-                                  asp-action="Add"
-                                  asp-route-id="@product.Id"
-                                  method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden"
-                                       name="returnUrl"
-                                       value="@($"{Context.Request.Path}{Context.Request.QueryString}#products")" />
-                                <button class="add-cart" type="submit">Thêm vào giỏ</button>
-                            </form>
-                        </div>
-                    </article>
-                }
+                <div class="metric-card">
+                    <span>Sản phẩm</span>
+                    <strong>Đa dạng</strong>
+                    <p>Áo thun, sơ mi, quần nam, áo khoác và các item basic dễ phối.</p>
+                </div>
+
+                <div class="metric-card">
+                    <span>Mua sắm</span>
+                    <strong>Dễ dùng</strong>
+                    <p>Khách hàng có thể xem sản phẩm, thêm vào giỏ và đặt hàng nhanh.</p>
+                </div>
+
+                <div class="metric-card">
+                    <span>Quản trị</span>
+                    <strong>Rõ ràng</strong>
+                    <p>Có khu vực quản lý đơn hàng, sản phẩm, khách hàng và doanh thu.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -120,13 +107,24 @@
         <div class="container collection-grid">
             <div class="collection-banner dark">
                 <p>Smart Casual</p>
+
                 <h2>Phối đồ đi học, đi làm, đi chơi đều ổn</h2>
-                <a href="#products">Khám phá ngay →</a>
+
+                <a asp-controller="Home"
+                   asp-action="SanPham">
+                    Khám phá ngay →
+                </a>
             </div>
+
             <div class="collection-banner light">
                 <p>Best Seller</p>
+
                 <h2>Áo thun basic và sơ mi Oxford đang được yêu thích</h2>
-                <a href="#products">Xem sản phẩm →</a>
+
+                <a asp-controller="Home"
+                   asp-action="SanPham">
+                    Xem sản phẩm →
+                </a>
             </div>
         </div>
     </section>
@@ -138,23 +136,58 @@
                     <p>Quy trình mua hàng</p>
                     <h2>Luồng chức năng khách hàng</h2>
                 </div>
+
                 <div class="timeline">
-                    <div><span>1</span><p>Xem danh sách sản phẩm</p></div>
-                    <div><span>2</span><p>Chọn size, màu và thêm vào giỏ hàng</p></div>
-                    <div><span>3</span><p>Nhập thông tin giao hàng</p></div>
-                    <div><span>4</span><p>Đặt hàng và theo dõi trạng thái đơn</p></div>
+                    <div>
+                        <span>1</span>
+                        <p>Xem danh sách sản phẩm ở trang Sản phẩm</p>
+                    </div>
+
+                    <div>
+                        <span>2</span>
+                        <p>Chọn sản phẩm và thêm vào giỏ hàng</p>
+                    </div>
+
+                    <div>
+                        <span>3</span>
+                        <p>Nhập thông tin giao hàng</p>
+                    </div>
+
+                    <div>
+                        <span>4</span>
+                        <p>Đặt hàng và theo dõi trạng thái đơn</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 28px;">
+                    <a class="btn btn-primary"
+                       asp-controller="Home"
+                       asp-action="SanPham">
+                        Đi đến trang sản phẩm
+                    </a>
                 </div>
             </div>
 
             <form class="checkout-card">
                 <h3>Demo thanh toán</h3>
+
                 <label for="fullName">Họ tên</label>
-                <input id="fullName" type="text" placeholder="Nguyễn Văn A">
+                <input id="fullName"
+                       type="text"
+                       placeholder="Nguyễn Văn A" />
+
                 <label for="phone">Số điện thoại</label>
-                <input id="phone" type="text" placeholder="0909 123 456">
+                <input id="phone"
+                       type="text"
+                       placeholder="0909 123 456" />
+
                 <label for="address">Địa chỉ giao hàng</label>
-                <textarea id="address" placeholder="Nhập địa chỉ nhận hàng"></textarea>
-                <button type="button" class="btn btn-primary full">Xác nhận đặt hàng</button>
+                <textarea id="address"
+                          placeholder="Nhập địa chỉ nhận hàng"></textarea>
+
+                <button type="button" class="btn btn-primary full">
+                    Xác nhận đặt hàng
+                </button>
             </form>
         </div>
     </section>
@@ -182,6 +215,7 @@
                     <h3>Đơn hàng gần đây</h3>
                     <button type="button">Quản lý đơn</button>
                 </div>
+
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -192,6 +226,7 @@
                                 <th>Trạng thái</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             @foreach (var order in Model.RecentOrders)
                             {
@@ -199,7 +234,11 @@
                                     <td>@order.Code</td>
                                     <td>@order.CustomerName</td>
                                     <td>@order.Total</td>
-                                    <td><span class="status @order.StatusCssClass">@order.Status</span></td>
+                                    <td>
+                                        <span class="status @order.StatusCssClass">
+                                            @order.Status
+                                        </span>
+                                    </td>
                                 </tr>
                             }
                         </tbody>

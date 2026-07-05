@@ -3,59 +3,124 @@
 @using MenStyle.Web.Extensions
 @using MenStyle.Web.ViewModels
 @inject UserManager<ApplicationUser> UserManager
+
 @{
     var currentUser = User.Identity?.IsAuthenticated == true
         ? await UserManager.GetUserAsync(User)
         : null;
+
     var cartItems = Context.Session.GetJson<List<CartItemViewModel>>("MENSTYLE_CART") ?? [];
     var cartQuantity = cartItems.Sum(x => x.Quantity);
 }
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - MENSTYLE</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
+
 <body>
     <header class="site-header">
         <div class="topbar">
             <span>Miễn phí vận chuyển cho đơn từ 499.000đ</span>
             <span>Hotline: 0909 123 456</span>
         </div>
+
         <nav class="navbar container">
-            <a class="logo" href="/#home">MEN<span>STYLE</span></a>
-            <button class="mobile-toggle" aria-label="Mở menu">☰</button>
+            <a class="logo"
+               asp-controller="Home"
+               asp-action="Index"
+               asp-fragment="home">
+                MEN<span>STYLE</span>
+            </a>
+
+            <button class="mobile-toggle" aria-label="Mở menu">
+                ☰
+            </button>
+
             <div class="nav-links">
-                <a href="/#home">Trang chủ</a>
-                <a href="/#products">Sản phẩm</a>
-                <a href="/#collection">Bộ sưu tập</a>
-                <a href="/#admin-preview">Admin</a>
-                <a href="/#contact">Liên hệ</a>
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="home">
+                    Trang chủ
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="SanPham">
+                    Sản phẩm
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="collection">
+                    Bộ sưu tập
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="admin-preview">
+                    Admin
+                </a>
+
+                <a href="#contact">
+                    Liên hệ
+                </a>
             </div>
+
             <div class="nav-actions">
-                <button class="search-btn" type="button">Tìm kiếm</button>
-                <a class="cart-btn" asp-controller="Cart" asp-action="Index">
+                <button class="search-btn" type="button">
+                    Tìm kiếm
+                </button>
+
+                <a class="cart-btn"
+                   asp-controller="Cart"
+                   asp-action="Index">
                     Giỏ hàng <span id="cartCount">@cartQuantity</span>
                 </a>
 
                 @if (currentUser is not null)
                 {
-                    <a class="nav-pill account-pill" asp-controller="Account" asp-action="Profile">
+                    <a class="nav-pill account-pill"
+                       asp-controller="Account"
+                       asp-action="Profile">
                         Xin chào, @currentUser.FullName
                     </a>
-                    <form class="logout-form" asp-controller="Account" asp-action="Logout" method="post">
-                        <button type="submit">Đăng xuất</button>
+
+                    <form class="logout-form"
+                          asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit">
+                            Đăng xuất
+                        </button>
                     </form>
                 }
                 else
                 {
-                    <a class="nav-pill" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                    <a class="nav-pill dark-pill" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                    <a class="nav-pill"
+                       asp-controller="Account"
+                       asp-action="Login">
+                        Đăng nhập
+                    </a>
+
+                    <a class="nav-pill dark-pill"
+                       asp-controller="Account"
+                       asp-action="Register">
+                        Đăng ký
+                    </a>
                 }
             </div>
         </nav>
@@ -63,7 +128,9 @@
 
     @if (TempData["SuccessMessage"] is string successMessage)
     {
-        <div class="flash-message success">@successMessage</div>
+        <div class="flash-message success">
+            @successMessage
+        </div>
     }
 
     @RenderBody()
@@ -71,15 +138,26 @@
     <footer id="contact" class="footer">
         <div class="container footer-grid">
             <div>
-                <a class="logo footer-logo" href="/#home">MEN<span>STYLE</span></a>
-                <p>Website demo bán quần áo nam dành cho đồ án thiết kế giao diện và web nâng cao.</p>
+                <a class="logo footer-logo"
+                   asp-controller="Home"
+                   asp-action="Index"
+                   asp-fragment="home">
+                    MEN<span>STYLE</span>
+                </a>
+
+                <p>
+                    Website demo bán quần áo nam dành cho đồ án thiết kế giao diện
+                    và web nâng cao.
+                </p>
             </div>
+
             <div>
                 <h4>Chính sách</h4>
                 <a href="#">Đổi trả</a>
                 <a href="#">Vận chuyển</a>
                 <a href="#">Bảo mật</a>
             </div>
+
             <div>
                 <h4>Liên hệ</h4>
                 <p>Email: support@menstyle.vn</p>
@@ -88,10 +166,14 @@
         </div>
     </footer>
 
-    <div id="toast" class="toast">Đã thêm sản phẩm vào giỏ hàng</div>
+    <div id="toast" class="toast">
+        Đã thêm sản phẩm vào giỏ hàng
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
