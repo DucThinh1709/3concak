@@ -1,19 +1,82 @@
-using Microsoft.AspNetCore.Mvc;
+using MenStyle.Web.Data;
 using MenStyle.Web.Models;
 using MenStyle.Web.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MenStyle.Web.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
+    private readonly ApplicationDbContext _context;
+
+    public HomeController(ApplicationDbContext context)
     {
+        _context = context;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        var categories = await _context.Categories
+            .OrderBy(c => c.Id)
+            .ToListAsync();
+
+        var products = await _context.Products
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.Id)
+            .ToListAsync();
+
+        int orderCount = await _context.CustomerOrders.CountAsync();
+        int userCount = await _context.Users.CountAsync();
+
+        var recentOrders = await _context.CustomerOrders
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(3)
+            .Select(o => new OrderSummary
+            {
+                Code = o.OrderCode,
+                CustomerName = o.CustomerName,
+                Total = (o.TotalAmount.ToString("N0") + "đ").Replace(",", "."),
+                Status = o.Status,
+                StatusCssClass = GetStatusCssClass(o.Status)
+            })
+            .ToListAsync();
+
+        var totalRevenue = await _context.CustomerOrders
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
         var viewModel = new HomeViewModel
         {
-            Categories = GetCategories(),
-            Products = GetProducts(),
-            Metrics = GetMetrics(),
-            RecentOrders = GetRecentOrders()
+            Categories = categories,
+            Products = products,
+            Metrics = new List<DashboardMetric>
+        {
+            new DashboardMetric
+            {
+                Title = "Sản phẩm",
+                Value = products.Count.ToString(),
+                Note = "Đang kinh doanh"
+            },
+            new DashboardMetric
+            {
+                Title = "Đơn hàng",
+                Value = orderCount.ToString(),
+                Note = "Tổng đơn đã tạo"
+            },
+            new DashboardMetric
+            {
+                Title = "Khách hàng",
+                Value = userCount.ToString(),
+                Note = "Tài khoản đã đăng ký"
+            },
+            new DashboardMetric
+            {
+                Title = "Doanh thu",
+                Value = (totalRevenue.ToString("N0") + "đ").Replace(",", "."),
+                Note = "Tổng doanh thu"
+            }
+        },
+            RecentOrders = recentOrders
         };
 
         return View(viewModel);
@@ -24,41 +87,14 @@ public class HomeController : Controller
         return View();
     }
 
-    private static List<Category> GetCategories()
+    private static string GetStatusCssClass(string status)
     {
-        return
-        [
-            new Category { Number = "01", Name = "Tất cả", Description = "Toàn bộ sản phẩm", Filter = "all", IsActive = true },
-            new Category { Number = "02", Name = "Áo thun", Description = "Basic, oversize", Filter = "ao-thun" },
-            new Category { Number = "03", Name = "Áo sơ mi", Description = "Công sở, casual", Filter = "so-mi" },
-            new Category { Number = "04", Name = "Quần nam", Description = "Jeans, kaki", Filter = "quan" },
-            new Category { Number = "05", Name = "Áo khoác", Description = "Bomber, denim", Filter = "ao-khoac" }
-        ];
-    }
-
-    private static List<Product> GetProducts()
-    {
-        return ProductCatalog.GetProducts();
-    }
-
-    private static List<DashboardMetric> GetMetrics()
-    {
-        return
-        [
-            new DashboardMetric { Title = "Sản phẩm", Value = "128", Note = "+12 sản phẩm mới" },
-            new DashboardMetric { Title = "Đơn hàng", Value = "46", Note = "8 đơn chờ xác nhận" },
-            new DashboardMetric { Title = "Khách hàng", Value = "312", Note = "24 khách hàng mới" },
-            new DashboardMetric { Title = "Doanh thu", Value = "18.6M", Note = "Trong tháng này" }
-        ];
-    }
-
-    private static List<OrderSummary> GetRecentOrders()
-    {
-        return
-        [
-            new OrderSummary { Code = "#MS1001", CustomerName = "Minh Quân", Total = "848.000đ", Status = "Chờ xác nhận", StatusCssClass = "pending" },
-            new OrderSummary { Code = "#MS1002", CustomerName = "Hoàng Nam", Total = "599.000đ", Status = "Đang giao", StatusCssClass = "shipping" },
-            new OrderSummary { Code = "#MS1003", CustomerName = "Đức Anh", Total = "1.087.000đ", Status = "Hoàn thành", StatusCssClass = "done" }
-        ];
+        return status switch
+        {
+            "Chờ xác nhận" => "pending",
+            "Đang giao" => "shipping",
+            "Hoàn thành" => "done",
+            _ => "pending"
+        };
     }
 }
