@@ -53,11 +53,51 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Category>().HasData(
-            new Category { Id = 1, Number = "01", Name = "Tất cả", Description = "Toàn bộ sản phẩm", Filter = "all", IsActive = true },
-            new Category { Id = 2, Number = "02", Name = "Áo thun", Description = "Basic, oversize", Filter = "ao-thun", IsActive = false },
-            new Category { Id = 3, Number = "03", Name = "Áo sơ mi", Description = "Công sở, casual", Filter = "so-mi", IsActive = false },
-            new Category { Id = 4, Number = "04", Name = "Quần nam", Description = "Jeans, kaki", Filter = "quan", IsActive = false },
-            new Category { Id = 5, Number = "05", Name = "Áo khoác", Description = "Bomber, denim", Filter = "ao-khoac", IsActive = false }
+            new Category
+            {
+                Id = 1,
+                Number = "01",
+                Name = "Tất cả",
+                Description = "Toàn bộ sản phẩm",
+                Filter = "all",
+                IsActive = true
+            },
+            new Category
+            {
+                Id = 2,
+                Number = "02",
+                Name = "Áo thun",
+                Description = "Basic, oversize",
+                Filter = "ao-thun",
+                IsActive = false
+            },
+            new Category
+            {
+                Id = 3,
+                Number = "03",
+                Name = "Áo sơ mi",
+                Description = "Công sở, casual",
+                Filter = "so-mi",
+                IsActive = false
+            },
+            new Category
+            {
+                Id = 4,
+                Number = "04",
+                Name = "Quần nam",
+                Description = "Jeans, kaki",
+                Filter = "quan",
+                IsActive = false
+            },
+            new Category
+            {
+                Id = 5,
+                Number = "05",
+                Name = "Áo khoác",
+                Description = "Bomber, denim",
+                Filter = "ao-khoac",
+                IsActive = false
+            }
         );
 
         builder.Entity<Product>().HasData(
