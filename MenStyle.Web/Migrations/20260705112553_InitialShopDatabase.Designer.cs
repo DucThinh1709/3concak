@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MenStyle.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260705110806_InitialShopDatabase")]
+    [Migration("20260705112553_InitialShopDatabase")]
     partial class InitialShopDatabase
     {
         /// <inheritdoc />

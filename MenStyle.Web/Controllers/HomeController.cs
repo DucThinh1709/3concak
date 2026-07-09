@@ -1,11 +1,20 @@
-using Microsoft.AspNetCore.Mvc;
+using MenStyle.Web.Data;
 using MenStyle.Web.Models;
 using MenStyle.Web.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MenStyle.Web.Controllers;
 
 public class HomeController : Controller
 {
+    private readonly ApplicationDbContext _context;
+
+    public HomeController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
     public IActionResult Index()
     {
         var viewModel = new HomeViewModel
@@ -22,10 +31,12 @@ public class HomeController : Controller
     }
 
     // Trang sản phẩm riêng: /Home/SanPham
-    public IActionResult SanPham(string? category = "all", string? sort = "default")
+    // Lấy sản phẩm từ database, có lọc danh mục, sắp xếp giá và tìm kiếm
+    public async Task<IActionResult> SanPham(string? category = "all", string? sort = "default", string? keyword = null)
     {
         var selectedCategory = string.IsNullOrWhiteSpace(category) ? "all" : category;
         var sortOrder = string.IsNullOrWhiteSpace(sort) ? "default" : sort;
+        var searchKeyword = keyword?.Trim();
 
         var categories = GetCategories();
 
@@ -34,28 +45,40 @@ public class HomeController : Controller
             item.IsActive = item.Filter == selectedCategory;
         }
 
-        var products = GetProducts();
+        var query = _context.Products.AsQueryable();
 
+        // Lọc theo danh mục
         if (selectedCategory != "all")
         {
-            products = products
-                .Where(p => p.CategorySlug == selectedCategory)
-                .ToList();
+            query = query.Where(p => p.CategorySlug == selectedCategory);
         }
 
-        products = sortOrder switch
+        // Tìm kiếm sản phẩm
+        if (!string.IsNullOrWhiteSpace(searchKeyword))
         {
-            "price-asc" => products.OrderBy(p => p.Price).ToList(),
-            "price-desc" => products.OrderByDescending(p => p.Price).ToList(),
-            _ => products
+            query = query.Where(p =>
+                p.Name.Contains(searchKeyword) ||
+                p.CategoryName.Contains(searchKeyword) ||
+                p.CategorySlug.Contains(searchKeyword));
+        }
+
+        // Sắp xếp sản phẩm
+        query = sortOrder switch
+        {
+            "price-asc" => query.OrderBy(p => p.Price),
+            "price-desc" => query.OrderByDescending(p => p.Price),
+            _ => query.OrderByDescending(p => p.Id)
         };
+
+        var products = await query.ToListAsync();
 
         var viewModel = new ProductListViewModel
         {
             Categories = categories,
             Products = products,
             SelectedCategory = selectedCategory,
-            SortOrder = sortOrder
+            SortOrder = sortOrder,
+            Keyword = searchKeyword
         };
 
         return View(viewModel);
@@ -107,11 +130,6 @@ public class HomeController : Controller
                 Filter = "ao-khoac"
             }
         ];
-    }
-
-    private static List<Product> GetProducts()
-    {
-        return ProductCatalog.GetProducts();
     }
 
     private static List<DashboardMetric> GetMetrics()

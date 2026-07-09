@@ -1,0 +1,70 @@
+﻿@model MenStyle.Web.Models.Product
+
+@{
+    ViewData["Title"] = "Xóa sản phẩm";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+}
+
+<section class="admin-crud-page">
+    <div class="container">
+
+        <div class="delete-card">
+            <p class="eyebrow">ADMIN</p>
+
+            <h1>Xóa sản phẩm</h1>
+
+            <p>
+                Bạn có chắc chắn muốn xóa sản phẩm này không?
+                Sau khi xóa, sản phẩm sẽ không còn hiển thị trong trang Sản phẩm.
+            </p>
+
+            <div class="delete-product-preview">
+                <img src="@Model.ImageUrl" alt="@Model.AltText" />
+
+                <div>
+                    <h3>@Model.Name</h3>
+
+                    <p>
+                        Danh mục:
+                        <strong>@Model.CategoryName</strong>
+                    </p>
+
+                    <p>
+                        Mã danh mục:
+                        <strong>@Model.CategorySlug</strong>
+                    </p>
+
+                    <div class="delete-price-row">
+                        <strong>@FormatPrice(Model.Price)</strong>
+                        <span>@FormatPrice(Model.OldPrice)</span>
+                    </div>
+                </div>
+            </div>
+
+            <form asp-controller="AdminProducts"
+                  asp-action="DeleteConfirmed"
+                  asp-route-id="@Model.Id"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div class="delete-actions">
+                    <a class="btn btn-outline"
+                       asp-controller="AdminProducts"
+                       asp-action="Index">
+                        Hủy
+                    </a>
+
+                    <button type="submit" class="danger-submit">
+                        Xác nhận xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</section>

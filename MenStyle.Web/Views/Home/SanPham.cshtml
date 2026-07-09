@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Sản phẩm";
 
+    var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
+
     string FormatPrice(decimal price)
     {
         return $"{price:N0}đ".Replace(",", ".");
@@ -41,6 +43,7 @@
                       class="toolbar product-toolbar">
 
                     <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                    <input type="hidden" name="keyword" value="@Model.Keyword" />
 
                     <select name="sort" onchange="this.form.submit()">
                         <option value="default" selected="@(Model.SortOrder == "default" ? "selected" : null)">
@@ -65,7 +68,8 @@
                        asp-controller="Home"
                        asp-action="SanPham"
                        asp-route-category="@category.Filter"
-                       asp-route-sort="@Model.SortOrder">
+                       asp-route-sort="@Model.SortOrder"
+                       asp-route-keyword="@Model.Keyword">
 
                         <span>@category.Number</span>
 
@@ -82,22 +86,103 @@
     <section class="products section-padding product-list-section">
         <div class="container">
 
-            <div class="section-head">
+            <div class="section-head product-list-head">
                 <div class="section-title left">
                     <p>Sản phẩm</p>
                     <h2>Danh sách sản phẩm</h2>
                 </div>
 
+                <div class="product-list-actions">
+                    <form class="product-search-form"
+                          asp-controller="Home"
+                          asp-action="SanPham"
+                          method="get">
+
+                        <input type="hidden" name="category" value="@Model.SelectedCategory" />
+                        <input type="hidden" name="sort" value="@Model.SortOrder" />
+
+                        <input type="search"
+                               name="keyword"
+                               placeholder="Tìm áo thun, sơ mi, quần..."
+                               value="@Model.Keyword" />
+
+                        <button type="submit">
+                            Tìm kiếm
+                        </button>
+                    </form>
+
+                    @if (isAdmin)
+                    {
+                        <a class="add-product-btn"
+                           asp-controller="AdminProducts"
+                           asp-action="Create">
+                            + Thêm sản phẩm
+                        </a>
+
+                        <a class="manage-product-btn"
+                           asp-controller="AdminProducts"
+                           asp-action="Index">
+                            Quản lý
+                        </a>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Keyword))
+            {
+                <div class="search-result-note">
+                    <span>
+                        Tìm thấy @Model.Products.Count sản phẩm với từ khóa:
+                        <strong>@Model.Keyword</strong>
+                    </span>
+
+                    <a asp-controller="Home"
+                       asp-action="SanPham"
+                       asp-route-category="@Model.SelectedCategory"
+                       asp-route-sort="@Model.SortOrder">
+                        Xóa tìm kiếm
+                    </a>
+                </div>
+            }
+            else
+            {
                 <p class="product-count">
                     Tìm thấy @Model.Products.Count sản phẩm
                 </p>
-            </div>
+            }
 
             @if (!Model.Products.Any())
             {
                 <div class="empty-state">
                     <h3>Không tìm thấy sản phẩm</h3>
-                    <p>Vui lòng chọn danh mục khác.</p>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Keyword))
+                    {
+                        <p>
+                            Không có sản phẩm nào phù hợp với từ khóa
+                            <strong>@Model.Keyword</strong>.
+                        </p>
+
+                        <a class="btn btn-primary"
+                           asp-controller="Home"
+                           asp-action="SanPham">
+                            Xem tất cả sản phẩm
+                        </a>
+                    }
+                    else
+                    {
+                        <p>Hiện chưa có sản phẩm nào trong danh mục này.</p>
+                    }
+
+                    @if (isAdmin)
+                    {
+                        <a class="btn btn-primary"
+                           style="margin-top: 18px;"
+                           asp-controller="AdminProducts"
+                           asp-action="Create">
+                            + Thêm sản phẩm mới
+                        </a>
+                    }
                 </div>
             }
             else
@@ -121,7 +206,11 @@
 
                                 <div class="price-row">
                                     <strong>@FormatPrice(product.Price)</strong>
-                                    <span>@FormatPrice(product.OldPrice)</span>
+
+                                    @if (product.OldPrice > 0)
+                                    {
+                                        <span>@FormatPrice(product.OldPrice)</span>
+                                    }
                                 </div>
 
                                 <form asp-controller="Cart"
@@ -141,6 +230,23 @@
                                         Thêm vào giỏ
                                     </button>
                                 </form>
+
+                                @if (isAdmin)
+                                {
+                                    <div class="product-admin-actions">
+                                        <a asp-controller="AdminProducts"
+                                           asp-action="Edit"
+                                           asp-route-id="@product.Id">
+                                            Sửa
+                                        </a>
+
+                                        <a asp-controller="AdminProducts"
+                                           asp-action="Delete"
+                                           asp-route-id="@product.Id">
+                                            Xóa
+                                        </a>
+                                    </div>
+                                }
                             </div>
                         </article>
                     }

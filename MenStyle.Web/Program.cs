@@ -1,4 +1,4 @@
-using MenStyle.Web.Data;
+﻿using MenStyle.Web.Data;
 using MenStyle.Web.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +44,82 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
     db.Database.Migrate();
+
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    string adminRole = "Admin";
+    string customerRole = "Customer";
+
+    if (!await roleManager.RoleExistsAsync(adminRole))
+    {
+        await roleManager.CreateAsync(new IdentityRole(adminRole));
+    }
+
+    if (!await roleManager.RoleExistsAsync(customerRole))
+    {
+        await roleManager.CreateAsync(new IdentityRole(customerRole));
+    }
+
+    string adminEmail = "admin@menstyle.vn";
+    string adminPassword = "Admin@123";
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FullName = "Quản trị viên",
+            PhoneNumber = "0909123456",
+            EmailConfirmed = true
+        };
+
+        var createAdminResult = await userManager.CreateAsync(adminUser, adminPassword);
+
+        if (createAdminResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, adminRole);
+        }
+    }
+    else
+    {
+        if (!await userManager.IsInRoleAsync(adminUser, adminRole))
+        {
+            await userManager.AddToRoleAsync(adminUser, adminRole);
+        }
+    }
+
+    // Giữ lại các sản phẩm có sẵn trong ProductCatalog
+    // Nếu database chưa có sản phẩm mẫu thì tự thêm vào bảng Products
+    var sampleProducts = ProductCatalog.GetProducts();
+
+    foreach (var sample in sampleProducts)
+    {
+        bool productExists = await db.Products.AnyAsync(p =>
+            p.Name == sample.Name &&
+            p.CategorySlug == sample.CategorySlug);
+
+        if (!productExists)
+        {
+            db.Products.Add(new Product
+            {
+                Name = sample.Name,
+                CategorySlug = sample.CategorySlug,
+                CategoryName = sample.CategoryName,
+                Price = sample.Price,
+                OldPrice = sample.OldPrice,
+                ImageUrl = sample.ImageUrl,
+                AltText = sample.AltText
+            });
+        }
+    }
+
+    await db.SaveChangesAsync();
 }
 
 if (!app.Environment.IsDevelopment())
@@ -57,6 +132,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 app.UseSession();
 
 app.UseAuthentication();

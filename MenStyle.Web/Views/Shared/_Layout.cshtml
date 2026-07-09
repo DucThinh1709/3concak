@@ -67,22 +67,22 @@
                     Bộ sưu tập
                 </a>
 
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="AdminProducts"
+                       asp-action="Index">
+                        Admin
+                    </a>
+                }
+
                 <a asp-controller="Home"
                    asp-action="Index"
-                   asp-fragment="admin-preview">
-                    Admin
-                </a>
-
-                <a href="#contact">
+                   asp-fragment="contact">
                     Liên hệ
                 </a>
             </div>
 
             <div class="nav-actions">
-                <button class="search-btn" type="button">
-                    Tìm kiếm
-                </button>
-
                 <a class="cart-btn"
                    asp-controller="Cart"
                    asp-action="Index">

@@ -1,0 +1,153 @@
+﻿@model MenStyle.Web.Models.Product
+
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+}
+
+<section class="admin-crud-page">
+    <div class="container">
+
+        <div class="admin-crud-header">
+            <div>
+                <p class="eyebrow">ADMIN</p>
+                <h1>Sửa sản phẩm</h1>
+                <p>Cập nhật thông tin sản phẩm đang có trong hệ thống.</p>
+            </div>
+
+            <a class="btn btn-outline"
+               asp-controller="AdminProducts"
+               asp-action="Index">
+                Quay lại
+            </a>
+        </div>
+
+        <form class="admin-form-card"
+              asp-controller="AdminProducts"
+              asp-action="Edit"
+              asp-route-id="@Model.Id"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Name">Tên sản phẩm</label>
+                    <input asp-for="Name"
+                           class="form-control"
+                           placeholder="Ví dụ: Áo hoodie nam" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CategoryName">Tên danh mục</label>
+                    <input asp-for="CategoryName"
+                           class="form-control"
+                           placeholder="Ví dụ: Áo khoác" />
+                    <span asp-validation-for="CategoryName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="CategorySlug">Mã danh mục</label>
+                    <select asp-for="CategorySlug" class="form-control">
+                        <option value="">-- Chọn danh mục --</option>
+                        <option value="ao-thun">Áo thun</option>
+                        <option value="so-mi">Áo sơ mi</option>
+                        <option value="quan">Quần nam</option>
+                        <option value="ao-khoac">Áo khoác</option>
+                    </select>
+                    <span asp-validation-for="CategorySlug" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ImageUrl">Đường dẫn ảnh</label>
+                    <input asp-for="ImageUrl"
+                           id="imageUrlInput"
+                           class="form-control"
+                           placeholder="/images/products/ao-hoodie.jpg hoặc link ảnh trực tiếp .jpg/.png/.webp" />
+                    <span asp-validation-for="ImageUrl" class="text-danger"></span>
+
+                    <small class="form-hint">
+                        Chỉ nhập đường dẫn ảnh trong project hoặc link ảnh trực tiếp.
+                        Không nhập link trang sản phẩm.
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Price">Giá bán</label>
+                    <input asp-for="Price"
+                           class="form-control"
+                           placeholder="299000" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="OldPrice">Giá cũ</label>
+                    <input asp-for="OldPrice"
+                           class="form-control"
+                           placeholder="350000" />
+                    <span asp-validation-for="OldPrice" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AltText">Mô tả ảnh</label>
+                <input asp-for="AltText"
+                       id="altTextInput"
+                       class="form-control"
+                       placeholder="Ví dụ: Áo hoodie màu đen và màu xám" />
+                <span asp-validation-for="AltText" class="text-danger"></span>
+            </div>
+
+            <div class="edit-preview-card">
+                <p>Xem trước ảnh sản phẩm</p>
+
+                <img id="imagePreview"
+                     src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/images/no-image.png" : Model.ImageUrl)"
+                     alt="@(string.IsNullOrWhiteSpace(Model.AltText) ? "Xem trước ảnh sản phẩm" : Model.AltText)"
+                     onerror="this.onerror=null;this.src='/images/no-image.png';" />
+
+                <small class="form-hint">
+                    Nếu ảnh không hiện, nghĩa là đường dẫn ảnh chưa đúng.
+                    Nên dùng dạng: <strong>/images/products/ten-anh.jpg</strong>
+                </small>
+            </div>
+
+            <button type="submit" class="btn-auth">
+                Cập nhật sản phẩm
+            </button>
+        </form>
+
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const imageUrlInput = document.getElementById("imageUrlInput");
+        const altTextInput = document.getElementById("altTextInput");
+        const imagePreview = document.getElementById("imagePreview");
+
+        imageUrlInput.addEventListener("input", function () {
+            const imageUrl = this.value.trim();
+
+            if (imageUrl.length > 0) {
+                imagePreview.src = imageUrl;
+            } else {
+                imagePreview.src = "/images/no-image.png";
+            }
+        });
+
+        altTextInput.addEventListener("input", function () {
+            imagePreview.alt = this.value.trim() || "Xem trước ảnh sản phẩm";
+        });
+    </script>
+}
