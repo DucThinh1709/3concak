@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace MenStyle.Web.Controllers
 {
@@ -165,7 +167,70 @@ namespace MenStyle.Web.Controllers
                 return RedirectToAction("Login");
             }
 
-            return View(user);
+            var model = new ProfileViewModel
+            {
+                Email = user.Email ?? "",
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber ?? "",
+                Address = user.Address,
+                Gender = user.Gender,
+                CreatedAt = user.CreatedAt
+            };
+
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(ProfileViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            model.Email = user.Email ?? "";
+            model.CreatedAt = user.CreatedAt;
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var phoneExists = _userManager.Users
+                .Any(u => u.PhoneNumber == model.PhoneNumber && u.Id != user.Id);
+
+            if (phoneExists)
+            {
+                ModelState.AddModelError(nameof(model.PhoneNumber), "Số điện thoại này đã được tài khoản khác sử dụng.");
+                return View(model);
+            }
+
+            user.FullName = model.FullName.Trim();
+            user.PhoneNumber = model.PhoneNumber.Trim();
+            user.Address = model.Address.Trim();
+            user.Gender = model.Gender;
+            user.SecurityStamp = Guid.NewGuid().ToString();
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                await _signInManager.RefreshSignInAsync(user);
+
+                TempData["SuccessMessage"] = "Thông tin cá nhân đã được lưu thành công.";
+                return RedirectToAction("Profile");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
         }
 
         [Authorize]
@@ -192,6 +257,97 @@ namespace MenStyle.Web.Controllers
                 .Replace("(", "")
                 .Replace(")", "")
                 .Trim();
+        }
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.LoginIdentifier);
+
+            if (user == null)
+            {
+                user = _userManager.Users
+                    .FirstOrDefault(u => u.PhoneNumber == model.LoginIdentifier);
+            }
+
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy tài khoản phù hợp.";
+                return View(model);
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            return RedirectToAction("ResetPassword", new
+            {
+                userId = user.Id,
+                token = encodedToken
+            });
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string userId, string token)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                UserId = userId,
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.FindByIdAsync(model.UserId);
+
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy tài khoản.";
+                return RedirectToAction("Login");
+            }
+
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
+
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+                return RedirectToAction("Login");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
         }
     }
 }

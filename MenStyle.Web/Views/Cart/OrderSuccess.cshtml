@@ -1,0 +1,109 @@
+﻿@model MenStyle.Web.Models.CustomerOrder
+
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+}
+
+<main class="order-success-page">
+    <div class="container">
+
+        <section class="order-success-card">
+            <div class="success-icon">✓</div>
+
+            <p class="eyebrow">MENSTYLE ORDER</p>
+
+            <h1>Đặt hàng thành công</h1>
+
+            <p class="success-desc">
+                Cảm ơn bạn đã mua hàng tại MENSTYLE. Đơn hàng của bạn đã được ghi nhận vào hệ thống.
+            </p>
+
+            <div class="order-code-box">
+                <span>Mã đơn hàng</span>
+                <strong>@Model.OrderCode</strong>
+            </div>
+        </section>
+
+        <section class="order-detail-layout">
+
+            <div class="order-detail-main">
+                <div class="order-box">
+                    <div class="order-box-head">
+                        <h2>Sản phẩm đã đặt</h2>
+                        <span>@Model.Items.Sum(x => x.Quantity) sản phẩm</span>
+                    </div>
+
+                    <div class="order-items">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="order-item-row">
+                                <div>
+                                    <h3>@item.ProductName</h3>
+                                    <p>Số lượng: @item.Quantity</p>
+                                    <p>Đơn giá: @FormatPrice(item.Price)</p>
+                                </div>
+
+                                <strong>@FormatPrice(item.LineTotal)</strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <aside class="order-detail-side">
+                <div class="order-box">
+                    <h2>Thông tin đơn hàng</h2>
+
+                    <div class="info-row">
+                        <span>Khách hàng</span>
+                        <strong>@Model.CustomerName</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Số điện thoại</span>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Chưa cập nhật" : Model.PhoneNumber)
+                        </strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Địa chỉ giao hàng</span>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Model.ShippingAddress) ? "Chưa cập nhật" : Model.ShippingAddress)
+                        </strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Ngày đặt</span>
+                        <strong>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Trạng thái</span>
+                        <strong class="order-status">@Model.Status</strong>
+                    </div>
+
+                    <div class="order-total-row">
+                        <span>Tổng tiền</span>
+                        <strong>@FormatPrice(Model.TotalAmount)</strong>
+                    </div>
+
+                    <a class="btn btn-primary full" asp-controller="Home" asp-action="SanPham">
+                        Tiếp tục mua sắm
+                    </a>
+
+                    <a class="btn btn-outline full mt-12" asp-controller="Cart" asp-action="Index">
+                        Quay lại giỏ hàng
+                    </a>
+                </div>
+            </aside>
+
+        </section>
+
+    </div>
+</main>

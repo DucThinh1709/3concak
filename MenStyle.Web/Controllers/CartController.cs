@@ -178,6 +178,7 @@ public class CartController : Controller
             Status = "Chờ xác nhận",
             CreatedAt = DateTime.Now,
             TotalAmount = cart.Sum(x => x.LineTotal),
+
             Items = cart.Select(x => new CustomerOrderItem
             {
                 ProductId = x.ProductId,
@@ -193,11 +194,22 @@ public class CartController : Controller
 
         HttpContext.Session.Remove(CartSessionKey);
 
-        TempData["SuccessMessage"] = $"Đặt hàng thành công. Mã đơn hàng của bạn là {order.OrderCode}.";
-
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("OrderSuccess", new { id = order.Id });
     }
+    [HttpGet]
+    public async Task<IActionResult> OrderSuccess(int id)
+    {
+        var order = await _context.CustomerOrders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
 
+        if (order == null)
+        {
+            return NotFound();
+        }
+
+        return View(order);
+    }
     private List<CartItemViewModel> GetCart()
     {
         return HttpContext.Session.GetJson<List<CartItemViewModel>>(CartSessionKey) ?? [];

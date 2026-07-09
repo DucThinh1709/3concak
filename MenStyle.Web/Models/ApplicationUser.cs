@@ -12,6 +12,9 @@ namespace MenStyle.Web.Models
         [StringLength(255)]
         public string? Address { get; set; }
 
+        [StringLength(20)]
+        public string Gender { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }
