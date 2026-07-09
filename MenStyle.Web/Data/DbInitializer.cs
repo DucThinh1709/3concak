@@ -1,21 +1,19 @@
 using MenStyle.Web.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace MenStyle.Web.Data;
 
 public static class DbInitializer
 {
-    public static async Task SeedAsync(IServiceProvider services)
+    public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
-        using var scope = services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        using var scope = serviceProvider.CreateScope();
+
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        await context.Database.EnsureCreatedAsync();
-
         string[] roles = ["Admin", "Customer"];
+
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -24,27 +22,37 @@ public static class DbInitializer
             }
         }
 
-        const string adminEmail = "admin@menstyle.vn";
-        const string adminPassword = "Admin@123";
+        string adminEmail = "admin@menstyle.vn";
+        string adminPassword = "Admin@123";
 
-        var admin = await userManager.Users.FirstOrDefaultAsync(user => user.Email == adminEmail);
-        if (admin is null)
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+        if (adminUser == null)
         {
-            admin = new ApplicationUser
+            adminUser = new ApplicationUser
             {
                 UserName = adminEmail,
                 Email = adminEmail,
                 EmailConfirmed = true,
                 FullName = "Quản trị viên MENSTYLE",
                 PhoneNumber = "0909123456",
-                Address = "MENSTYLE Office",
+                Address = "TP. Hồ Chí Minh",
+                Gender = "Nam",
                 CreatedAt = DateTime.Now
             };
 
-            var result = await userManager.CreateAsync(admin, adminPassword);
-            if (result.Succeeded)
+            var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+
+            if (createResult.Succeeded)
             {
-                await userManager.AddToRoleAsync(admin, "Admin");
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+        }
+        else
+        {
+            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
     }

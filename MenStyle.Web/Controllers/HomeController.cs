@@ -17,14 +17,79 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+    private readonly ApplicationDbContext _context;
+
+    public HomeController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        int productCount = await _context.Products
+            .Where(p => p.IsActive)
+            .CountAsync();
+
+        int orderCount = await _context.CustomerOrders
+            .CountAsync();
+
+        int userCount = await _context.Users
+            .CountAsync();
+
+        int pendingOrderCount = await _context.CustomerOrders
+            .Where(o => o.Status == "Chờ xác nhận")
+            .CountAsync();
+
+        decimal totalRevenue = await _context.CustomerOrders
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+        var recentOrders = await _context.CustomerOrders
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(5)
+            .Select(o => new OrderSummary
+            {
+                Code = o.OrderCode,
+                CustomerName = o.CustomerName,
+                Total = (o.TotalAmount.ToString("N0") + "đ").Replace(",", "."),
+                Status = o.Status,
+                StatusCssClass = GetStatusCssClass(o.Status)
+            })
+            .ToListAsync();
+
         var viewModel = new HomeViewModel
         {
-            // Trang chủ không còn hiển thị sản phẩm nữa
             Categories = [],
             Products = [],
 
-            Metrics = GetMetrics(),
-            RecentOrders = GetRecentOrders()
+            Metrics =
+            [
+                new DashboardMetric
+                {
+                    Title = "Sản phẩm",
+                    Value = productCount.ToString(),
+                    Note = "Đang kinh doanh"
+                },
+                new DashboardMetric
+                {
+                    Title = "Đơn hàng",
+                    Value = orderCount.ToString(),
+                    Note = $"{pendingOrderCount} đơn chờ xác nhận"
+                },
+                new DashboardMetric
+                {
+                    Title = "Khách hàng",
+                    Value = userCount.ToString(),
+                    Note = "Tài khoản đã đăng ký"
+                },
+                new DashboardMetric
+                {
+                    Title = "Doanh thu",
+                    Value = (totalRevenue.ToString("N0") + "đ").Replace(",", "."),
+                    Note = "Tổng doanh thu đã ghi nhận"
+                }
+            ],
+
+            RecentOrders = recentOrders
         };
 
         return View(viewModel);
@@ -33,12 +98,15 @@ public class HomeController : Controller
     // Trang sản phẩm riêng: /Home/SanPham
     // Lấy sản phẩm từ database, có lọc danh mục, sắp xếp giá và tìm kiếm
     public async Task<IActionResult> SanPham(string? category = "all", string? sort = "default", string? keyword = null)
+    public async Task<IActionResult> SanPham(string? category = "all", string? sort = "default")
     {
         var selectedCategory = string.IsNullOrWhiteSpace(category) ? "all" : category;
         var sortOrder = string.IsNullOrWhiteSpace(sort) ? "default" : sort;
         var searchKeyword = keyword?.Trim();
 
-        var categories = GetCategories();
+        var categories = await _context.Categories
+            .OrderBy(c => c.Id)
+            .ToListAsync();
 
         foreach (var item in categories)
         {
@@ -46,6 +114,9 @@ public class HomeController : Controller
         }
 
         var query = _context.Products.AsQueryable();
+        var productQuery = _context.Products
+            .Where(p => p.IsActive)
+            .AsQueryable();
 
         // Lọc theo danh mục
         if (selectedCategory != "all")
@@ -60,17 +131,25 @@ public class HomeController : Controller
                 p.Name.Contains(searchKeyword) ||
                 p.CategoryName.Contains(searchKeyword) ||
                 p.CategorySlug.Contains(searchKeyword));
+            productQuery = productQuery
+                .Where(p => p.CategorySlug == selectedCategory);
         }
 
         // Sắp xếp sản phẩm
         query = sortOrder switch
+        productQuery = sortOrder switch
         {
             "price-asc" => query.OrderBy(p => p.Price),
             "price-desc" => query.OrderByDescending(p => p.Price),
             _ => query.OrderByDescending(p => p.Id)
+            "price-asc" => productQuery.OrderBy(p => p.Price),
+            "price-desc" => productQuery.OrderByDescending(p => p.Price),
+            _ => productQuery.OrderBy(p => p.Id)
         };
 
         var products = await query.ToListAsync();
+
+        var products = await productQuery.ToListAsync();
 
         var viewModel = new ProductListViewModel
         {
@@ -89,7 +168,7 @@ public class HomeController : Controller
         return View();
     }
 
-    private static List<Category> GetCategories()
+    private static string GetStatusCssClass(string status)
     {
         return
         [
@@ -192,5 +271,12 @@ public class HomeController : Controller
                 StatusCssClass = "done"
             }
         ];
+        return status switch
+        {
+            "Chờ xác nhận" => "pending",
+            "Đang giao" => "shipping",
+            "Hoàn thành" => "done",
+            _ => "pending"
+        };
     }
 }

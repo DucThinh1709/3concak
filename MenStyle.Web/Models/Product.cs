@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MenStyle.Web.Models;
 
@@ -21,9 +22,11 @@ public class Product
 
     [Required(ErrorMessage = "Vui lòng nhập giá sản phẩm")]
     [Range(0, double.MaxValue, ErrorMessage = "Giá sản phẩm phải lớn hơn hoặc bằng 0")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
 
     [Range(0, double.MaxValue, ErrorMessage = "Giá cũ phải lớn hơn hoặc bằng 0")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal OldPrice { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập đường dẫn hình ảnh")]
