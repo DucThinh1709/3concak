@@ -1,0 +1,172 @@
+﻿@model MenStyle.Web.ViewModels.CollectionPageViewModel
+
+@{
+    ViewData["Title"] = "Bộ sưu tập";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+}
+
+<main class="collection-page">
+
+    <section class="collection-hero">
+        <div class="container collection-hero-inner">
+            <div>
+                <p class="eyebrow">MENSTYLE COLLECTION 2026</p>
+                <h1>Bộ sưu tập thời trang nam</h1>
+                <p>
+                    Khám phá các nhóm sản phẩm nổi bật theo phong cách: basic, lịch lãm,
+                    năng động và hiện đại dành cho nam giới.
+                </p>
+
+                <div class="collection-stats">
+                    <div>
+                        <strong>@Model.Collections.Count</strong>
+                        <span>Bộ sưu tập</span>
+                    </div>
+
+                    <div>
+                        <strong>@Model.TotalProducts</strong>
+                        <span>Sản phẩm</span>
+                    </div>
+
+                    <div>
+                        <strong>2026</strong>
+                        <span>New season</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collection-hero-card">
+                <span>New Collection</span>
+                <strong>Modern Men</strong>
+                <p>Đơn giản, nam tính và dễ phối đồ.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="collection-featured">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Featured</p>
+                    <h2>Sản phẩm nổi bật</h2>
+                </div>
+
+                <a class="btn btn-outline" asp-controller="Home" asp-action="SanPham">
+                    Xem tất cả sản phẩm
+                </a>
+            </div>
+
+            @if (!Model.FeaturedProducts.Any())
+            {
+                <div class="empty-collection">
+                    Chưa có sản phẩm nào trong hệ thống.
+                </div>
+            }
+            else
+            {
+                <div class="collection-product-grid">
+                    @foreach (var product in Model.FeaturedProducts)
+                    {
+                        <article class="collection-product-card">
+                            <div class="collection-product-image">
+                                <img src="@product.ImageUrl" alt="@product.AltText" />
+                            </div>
+
+                            <div class="collection-product-info">
+                                <span>@product.CategoryName</span>
+                                <h3>@product.Name</h3>
+
+                                <div class="collection-price">
+                                    <strong>@FormatPrice(product.Price)</strong>
+
+                                    @if (product.OldPrice > product.Price)
+                                    {
+                                        <del>@FormatPrice(product.OldPrice)</del>
+                                    }
+                                </div>
+
+                                <form asp-controller="Cart"
+                                      asp-action="Add"
+                                      asp-route-id="@product.Id"
+                                      method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="returnUrl"
+                                           value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
+
+                                    <button type="submit" class="add-cart">
+                                        Thêm vào giỏ
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="collection-list-section">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Categories</p>
+                    <h2>Khám phá theo bộ sưu tập</h2>
+                </div>
+            </div>
+
+            <div class="collection-list">
+                @foreach (var collection in Model.Collections)
+                {
+                    <article class="collection-block">
+                        <div class="collection-block-head">
+                            <div>
+                                <span class="collection-label">@collection.Slug</span>
+                                <h3>@collection.Title</h3>
+                                <p>@collection.Description</p>
+                            </div>
+
+                            <a class="btn btn-outline"
+                               asp-controller="Home"
+                               asp-action="SanPham"
+                               asp-route-category="@collection.Slug">
+                                Xem bộ sưu tập
+                            </a>
+                        </div>
+
+                        @if (!collection.Products.Any())
+                        {
+                            <div class="empty-collection small">
+                                Bộ sưu tập này chưa có sản phẩm.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="collection-mini-grid">
+                                @foreach (var product in collection.Products)
+                                {
+                                    <a class="collection-mini-card"
+                                       asp-controller="Home"
+                                       asp-action="SanPham"
+                                       asp-route-category="@collection.Slug">
+                                        <img src="@product.ImageUrl" alt="@product.AltText" />
+
+                                        <div>
+                                            <h4>@product.Name</h4>
+                                            <span>@FormatPrice(product.Price)</span>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+
+</main>

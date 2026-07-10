@@ -61,19 +61,10 @@
                     Sản phẩm
                 </a>
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   asp-fragment="collection">
-                    Bộ sưu tập
-                </a>
-
-                @if (User.IsInRole("Admin"))
-                {
-                    <a asp-controller="AdminProducts"
-                       asp-action="Index">
-                        Admin
-                    </a>
-                }
+                <a asp-controller="Home" 
+                   asp-action="BoSuuTap">
+                   Bộ sưu tập
+               </a>
 
                 <a asp-controller="Home"
                    asp-action="Index"
