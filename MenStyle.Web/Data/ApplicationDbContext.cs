@@ -15,7 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Product> Products => Set<Product>();
     public DbSet<CustomerOrder> CustomerOrders => Set<CustomerOrder>();
     public DbSet<CustomerOrderItem> CustomerOrderItems => Set<CustomerOrderItem>();
-
+    public DbSet<ShoppingCartItem> ShoppingCartItems => Set<ShoppingCartItem>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -51,6 +51,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(o => o.UserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<ShoppingCartItem>()
+      .HasOne(x => x.User)
+      .WithMany()
+      .HasForeignKey(x => x.UserId)
+      .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ShoppingCartItem>()
+            .HasOne(x => x.Product)
+            .WithMany()
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ShoppingCartItem>()
+            .HasIndex(x => new { x.UserId, x.ProductId })
+            .IsUnique(); ;
 
         builder.Entity<Category>().HasData(
             new Category

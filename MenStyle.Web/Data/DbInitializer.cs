@@ -1,5 +1,6 @@
 using MenStyle.Web.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace MenStyle.Web.Data;
 
@@ -9,6 +10,7 @@ public static class DbInitializer
     {
         using var scope = serviceProvider.CreateScope();
 
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -55,5 +57,39 @@ public static class DbInitializer
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
+
+        if (!await db.Categories.AnyAsync())
+        {
+            db.Categories.AddRange(
+                new Category { Number = "01", Name = "Tất cả", Description = "Toàn bộ sản phẩm", Filter = "all", IsActive = true },
+                new Category { Number = "02", Name = "Áo thun", Description = "Basic, oversize", Filter = "ao-thun", IsActive = false },
+                new Category { Number = "03", Name = "Áo sơ mi", Description = "Công sở, casual", Filter = "so-mi", IsActive = false },
+                new Category { Number = "04", Name = "Quần nam", Description = "Jeans, kaki", Filter = "quan", IsActive = false },
+                new Category { Number = "05", Name = "Áo khoác", Description = "Bomber, denim", Filter = "ao-khoac", IsActive = false }
+            );
+        }
+
+        if (!await db.Products.AnyAsync())
+        {
+            var products = ProductCatalog.GetProducts();
+
+            foreach (var item in products)
+            {
+                db.Products.Add(new Product
+                {
+                    Name = item.Name,
+                    CategorySlug = item.CategorySlug,
+                    CategoryName = item.CategoryName,
+                    Price = item.Price,
+                    OldPrice = item.OldPrice,
+                    ImageUrl = item.ImageUrl,
+                    AltText = item.AltText,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now
+                });
+            }
+        }
+
+        await db.SaveChangesAsync();
     }
 }

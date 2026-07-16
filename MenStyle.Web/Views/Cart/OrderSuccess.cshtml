@@ -87,6 +87,23 @@
                         <span>Trạng thái</span>
                         <strong class="order-status">@Model.Status</strong>
                     </div>
+                    <div class="info-row">
+                        <span>Thanh toán</span>
+                        <strong>@Model.PaymentMethod</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Trạng thái thanh toán</span>
+                        <strong>@Model.PaymentStatus</strong>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Note))
+                    {
+                        <div class="info-row">
+                            <span>Ghi chú</span>
+                            <strong>@Model.Note</strong>
+                        </div>
+                    }
 
                     <div class="order-total-row">
                         <span>Tổng tiền</span>

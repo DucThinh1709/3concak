@@ -2,6 +2,9 @@
 @using Microsoft.AspNetCore.Identity
 @using MenStyle.Web.Extensions
 @using MenStyle.Web.ViewModels
+@using MenStyle.Web.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext DbContext
 @inject UserManager<ApplicationUser> UserManager
 
 @{
@@ -9,8 +12,14 @@
         ? await UserManager.GetUserAsync(User)
         : null;
 
-    var cartItems = Context.Session.GetJson<List<CartItemViewModel>>("MENSTYLE_CART") ?? [];
-    var cartQuantity = cartItems.Sum(x => x.Quantity);
+    int cartQuantity = 0;
+
+    if (currentUser is not null)
+    {
+        cartQuantity = await DbContext.ShoppingCartItems
+            .Where(x => x.UserId == currentUser.Id)
+            .SumAsync(x => (int?)x.Quantity) ?? 0;
+    }
 }
 
 <!DOCTYPE html>
@@ -86,6 +95,12 @@
                        asp-controller="Account"
                        asp-action="Profile">
                         Xin chào, @currentUser.FullName
+                    </a>
+
+                    <a class="nav-pill"
+                       asp-controller="Account"
+                       asp-action="MyOrders">
+                        Đơn hàng
                     </a>
 
                     <form class="logout-form"

@@ -1,7 +1,7 @@
 ﻿using MenStyle.Web.Data;
-using MenStyle.Web.Extensions;
 using MenStyle.Web.Models;
 using MenStyle.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +10,6 @@ namespace MenStyle.Web.Controllers;
 
 public class CartController : Controller
 {
-    private const string CartSessionKey = "MENSTYLE_CART";
-
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
 
@@ -23,9 +21,17 @@ public class CartController : Controller
         _userManager = userManager;
     }
 
-    public IActionResult Index()
+    [Authorize]
+    public async Task<IActionResult> Index()
     {
-        var cart = GetCart();
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var cart = await GetCartAsync(user.Id);
 
         var viewModel = new CartViewModel
         {
@@ -39,6 +45,17 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(int id, string? returnUrl = null)
     {
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            var safeReturnUrl = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : Url.Action("SanPham", "Home");
+
+            return RedirectToAction("Login", "Account", new { returnUrl = safeReturnUrl });
+        }
+
         var product = await _context.Products
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
@@ -48,28 +65,29 @@ public class CartController : Controller
             return NotFound();
         }
 
-        var cart = GetCart();
-
-        var existingItem = cart.FirstOrDefault(x => x.ProductId == product.Id);
+        var existingItem = await _context.ShoppingCartItems
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == product.Id);
 
         if (existingItem == null)
         {
-            cart.Add(new CartItemViewModel
+            var cartItem = new ShoppingCartItem
             {
+                UserId = user.Id,
                 ProductId = product.Id,
-                ProductName = product.Name,
-                CategoryName = product.CategoryName,
-                ImageUrl = product.ImageUrl,
-                Price = product.Price,
-                Quantity = 1
-            });
+                Quantity = 1,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            _context.ShoppingCartItems.Add(cartItem);
         }
         else
         {
             existingItem.Quantity++;
+            existingItem.UpdatedAt = DateTime.Now;
         }
 
-        SaveCart(cart);
+        await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Đã thêm sản phẩm vào giỏ hàng.";
 
@@ -81,30 +99,46 @@ public class CartController : Controller
         return RedirectToAction("Index");
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Increase(int id)
+    public async Task<IActionResult> Increase(int id)
     {
-        var cart = GetCart();
+        var user = await _userManager.GetUserAsync(User);
 
-        var item = cart.FirstOrDefault(x => x.ProductId == id);
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var item = await _context.ShoppingCartItems
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == id);
 
         if (item != null)
         {
             item.Quantity++;
-            SaveCart(cart);
+            item.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
         }
 
         return RedirectToAction("Index");
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Decrease(int id)
+    public async Task<IActionResult> Decrease(int id)
     {
-        var cart = GetCart();
+        var user = await _userManager.GetUserAsync(User);
 
-        var item = cart.FirstOrDefault(x => x.ProductId == id);
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var item = await _context.ShoppingCartItems
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == id);
 
         if (item != null)
         {
@@ -112,48 +146,117 @@ public class CartController : Controller
 
             if (item.Quantity <= 0)
             {
-                cart.Remove(item);
+                _context.ShoppingCartItems.Remove(item);
+            }
+            else
+            {
+                item.UpdatedAt = DateTime.Now;
             }
 
-            SaveCart(cart);
+            await _context.SaveChangesAsync();
         }
 
         return RedirectToAction("Index");
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Remove(int id)
+    public async Task<IActionResult> Remove(int id)
     {
-        var cart = GetCart();
+        var user = await _userManager.GetUserAsync(User);
 
-        var item = cart.FirstOrDefault(x => x.ProductId == id);
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var item = await _context.ShoppingCartItems
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == id);
 
         if (item != null)
         {
-            cart.Remove(item);
-            SaveCart(cart);
+            _context.ShoppingCartItems.Remove(item);
+            await _context.SaveChangesAsync();
         }
 
         return RedirectToAction("Index");
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Clear()
+    public async Task<IActionResult> Clear()
     {
-        HttpContext.Session.Remove(CartSessionKey);
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var items = await _context.ShoppingCartItems
+            .Where(x => x.UserId == user.Id)
+            .ToListAsync();
+
+        if (items.Any())
+        {
+            _context.ShoppingCartItems.RemoveRange(items);
+            await _context.SaveChangesAsync();
+        }
 
         TempData["SuccessMessage"] = "Đã xóa toàn bộ giỏ hàng.";
 
         return RedirectToAction("Index");
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [Authorize]
+    [HttpGet]
     public async Task<IActionResult> Checkout()
     {
-        var cart = GetCart();
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var cart = await GetCartAsync(user.Id);
+
+        if (!cart.Any())
+        {
+            TempData["ErrorMessage"] = "Giỏ hàng đang trống, chưa thể thanh toán.";
+            return RedirectToAction("Index");
+        }
+
+        var model = new CheckoutViewModel
+        {
+            Items = cart,
+            OrderCode = GenerateOrderCode(),
+            CustomerName = user.FullName ?? "",
+            PhoneNumber = user.PhoneNumber ?? "",
+            ShippingAddress = user.Address ?? "",
+            PaymentMethod = "Thanh toán khi nhận hàng",
+            NoNote = true,
+            Note = ""
+        };
+
+        return View(model);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Checkout(CheckoutViewModel model)
+    {
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var cart = await GetCartAsync(user.Id);
 
         if (!cart.Any())
         {
@@ -161,20 +264,48 @@ public class CartController : Controller
             return RedirectToAction("Index");
         }
 
-        ApplicationUser? user = null;
+        model.Items = cart;
 
-        if (User.Identity?.IsAuthenticated == true)
+        if (model.NoNote)
         {
-            user = await _userManager.GetUserAsync(User);
+            ModelState.Remove(nameof(model.Note));
+            model.Note = "";
         }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var allowedPayments = new[]
+        {
+            "Thanh toán khi nhận hàng",
+            "Chuyển khoản ngân hàng"
+        };
+
+        if (!allowedPayments.Contains(model.PaymentMethod))
+        {
+            ModelState.AddModelError(nameof(model.PaymentMethod), "Phương thức thanh toán không hợp lệ.");
+            return View(model);
+        }
+
+        var paymentStatus = model.PaymentMethod == "Chuyển khoản ngân hàng"
+            ? "Chờ thanh toán"
+            : "Chưa thanh toán";
 
         var order = new CustomerOrder
         {
-            OrderCode = "MS" + DateTime.Now.ToString("yyyyMMddHHmmss"),
-            UserId = user?.Id,
-            CustomerName = user?.FullName ?? "Khách vãng lai",
-            PhoneNumber = user?.PhoneNumber ?? "",
-            ShippingAddress = user?.Address ?? "",
+            OrderCode = string.IsNullOrWhiteSpace(model.OrderCode)
+                ? GenerateOrderCode()
+                : model.OrderCode,
+
+            UserId = user.Id,
+            CustomerName = model.CustomerName.Trim(),
+            PhoneNumber = model.PhoneNumber.Trim(),
+            ShippingAddress = model.ShippingAddress.Trim(),
+            PaymentMethod = model.PaymentMethod,
+            PaymentStatus = paymentStatus,
+            Note = model.NoNote ? "" : model.Note?.Trim() ?? "",
             Status = "Chờ xác nhận",
             CreatedAt = DateTime.Now,
             TotalAmount = cart.Sum(x => x.LineTotal),
@@ -189,16 +320,24 @@ public class CartController : Controller
             }).ToList()
         };
 
-        _context.CustomerOrders.Add(order);
-        await _context.SaveChangesAsync();
+        var cartItems = await _context.ShoppingCartItems
+            .Where(x => x.UserId == user.Id)
+            .ToListAsync();
 
-        HttpContext.Session.Remove(CartSessionKey);
+        _context.CustomerOrders.Add(order);
+        _context.ShoppingCartItems.RemoveRange(cartItems);
+
+        await _context.SaveChangesAsync();
 
         return RedirectToAction("OrderSuccess", new { id = order.Id });
     }
+
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> OrderSuccess(int id)
     {
+        var user = await _userManager.GetUserAsync(User);
+
         var order = await _context.CustomerOrders
             .Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == id);
@@ -208,15 +347,34 @@ public class CartController : Controller
             return NotFound();
         }
 
+        if (!User.IsInRole("Admin") && order.UserId != user?.Id)
+        {
+            return Forbid();
+        }
+
         return View(order);
     }
-    private List<CartItemViewModel> GetCart()
+
+    private async Task<List<CartItemViewModel>> GetCartAsync(string userId)
     {
-        return HttpContext.Session.GetJson<List<CartItemViewModel>>(CartSessionKey) ?? [];
+        return await _context.ShoppingCartItems
+            .Include(x => x.Product)
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.UpdatedAt)
+            .Select(x => new CartItemViewModel
+            {
+                ProductId = x.ProductId,
+                ProductName = x.Product!.Name,
+                CategoryName = x.Product.CategoryName,
+                ImageUrl = x.Product.ImageUrl,
+                Price = x.Product.Price,
+                Quantity = x.Quantity
+            })
+            .ToListAsync();
     }
 
-    private void SaveCart(List<CartItemViewModel> cart)
+    private string GenerateOrderCode()
     {
-        HttpContext.Session.SetJson(CartSessionKey, cart);
+        return "MS" + DateTime.Now.ToString("yyyyMMddHHmmss");
     }
 }

@@ -1,0 +1,75 @@
+﻿@model List<MenStyle.Web.Models.CustomerOrder>
+
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+}
+
+<main class="admin-crud-page">
+    <div class="container">
+
+        <div class="admin-crud-header">
+            <div>
+                <p class="eyebrow">CUSTOMER ORDERS</p>
+                <h1>Đơn hàng của tôi</h1>
+                <p>Theo dõi các đơn hàng bạn đã đặt tại MENSTYLE.</p>
+            </div>
+
+            <a class="btn btn-outline" asp-controller="Account" asp-action="Profile">
+                Tài khoản cá nhân
+            </a>
+        </div>
+
+        <div class="admin-crud-card">
+            <table class="admin-crud-table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Số sản phẩm</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="empty-table">
+                                Bạn chưa có đơn hàng nào.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var order in Model)
+                        {
+                            <tr>
+                                <td><strong>@order.OrderCode</strong></td>
+                                <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@order.Items.Sum(i => i.Quantity)</td>
+                                <td>@FormatPrice(order.TotalAmount)</td>
+                                <td>@order.Status</td>
+                                <td>
+                                    <a class="edit-btn"
+                                       asp-controller="Account"
+                                       asp-action="MyOrderDetails"
+                                       asp-route-id="@order.Id">
+                                        Xem chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</main>

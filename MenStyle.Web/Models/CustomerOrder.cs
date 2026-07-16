@@ -24,6 +24,15 @@ public class CustomerOrder
     [StringLength(255)]
     public string ShippingAddress { get; set; } = string.Empty;
 
+    [StringLength(50)]
+    public string PaymentMethod { get; set; } = "Thanh toán khi nhận hàng";
+
+    [StringLength(50)]
+    public string PaymentStatus { get; set; } = "Chưa thanh toán";
+
+    [StringLength(500)]
+    public string Note { get; set; } = string.Empty;
+
     [Column(TypeName = "decimal(18,2)")]
     public decimal TotalAmount { get; set; }
 

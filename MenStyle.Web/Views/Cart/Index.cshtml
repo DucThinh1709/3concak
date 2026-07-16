@@ -106,12 +106,11 @@
                         <strong>@FormatPrice(Model.Total)</strong>
                     </div>
 
-                    <form asp-controller="Cart" asp-action="Checkout" method="post">
-                        @Html.AntiForgeryToken()
-                        <button class="btn btn-primary full" type="submit">
-                            Xác nhận đặt hàng
-                        </button>
-                    </form>
+                    <a class="btn btn-primary full"
+                       asp-controller="Cart"
+                       asp-action="Checkout">
+                        Tiến hành thanh toán
+                    </a>
 
                     <form asp-controller="Cart" asp-action="Clear" method="post">
                         @Html.AntiForgeryToken()

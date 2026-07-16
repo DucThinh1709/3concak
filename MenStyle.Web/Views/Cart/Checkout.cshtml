@@ -1,0 +1,225 @@
+﻿@model MenStyle.Web.ViewModels.CheckoutViewModel
+@using System.Globalization
+@using System.Net
+
+@{
+    ViewData["Title"] = "Thanh toán";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+
+    var bankCode = "Eximbank"; // đổi thành ngân hàng của bạn
+    var accountNumber = "0377466477"; // đổi thành STK của bạn
+    var accountName = "HUYNH DUC THINH"; // đổi thành tên tài khoản của bạn
+
+    var amount = Convert.ToInt64(Model.Total);
+    var addInfo = $"Thanh toan don {Model.OrderCode}";
+    var qrUrl =
+        $"https://img.vietqr.io/image/{bankCode}-{accountNumber}-compact2.png?amount={amount}&addInfo={WebUtility.UrlEncode(addInfo)}&accountName={WebUtility.UrlEncode(accountName)}";
+}
+
+<main class="payment-page">
+    <div class="container">
+
+        <div class="payment-heading">
+            <div>
+                <p class="eyebrow">MENSTYLE CHECKOUT</p>
+                <h1>Thanh toán đơn hàng</h1>
+                <p>Kiểm tra thông tin giao hàng và chọn phương thức thanh toán.</p>
+            </div>
+
+            <a class="btn btn-outline" asp-controller="Cart" asp-action="Index">
+                Quay lại giỏ hàng
+            </a>
+        </div>
+
+        <form asp-controller="Cart" asp-action="Checkout" method="post" class="payment-layout">
+            @Html.AntiForgeryToken()
+            <input asp-for="OrderCode" type="hidden" />
+            <section class="payment-card">
+                <h2>Thông tin giao hàng</h2>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger validation-box"></div>
+
+                <div class="form-group">
+                    <label asp-for="CustomerName"></label>
+                    <input asp-for="CustomerName" class="form-control" placeholder="Nhập họ tên người nhận" />
+                    <span asp-validation-for="CustomerName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PhoneNumber"></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="0909123456" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ShippingAddress"></label>
+                    <input asp-for="ShippingAddress" class="form-control" placeholder="Nhập địa chỉ giao hàng" />
+                    <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                </div>
+
+                <div class="note-toggle-box">
+                    <div class="note-toggle-header">
+                        <div>
+                            <strong>Ghi chú đơn hàng</strong>
+                            <p>Bật lên nếu bạn không có ghi chú gì cho đơn hàng.</p>
+                        </div>
+
+                        <label class="switch-toggle">
+                            <input asp-for="NoNote" id="noNoteToggle" />
+                            <span></span>
+                        </label>
+                    </div>
+
+                    <div id="noteInputBox" class="note-input-box">
+                        <label asp-for="Note"></label>
+                        <textarea asp-for="Note"
+                                  id="noteTextarea"
+                                  class="form-control textarea-control"
+                                  placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."></textarea>
+                        <span asp-validation-for="Note" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h2 class="payment-section-title">Phương thức thanh toán</h2>
+
+                <div class="payment-method-list">
+                    <label class="payment-method-card">
+                        <input asp-for="PaymentMethod" type="radio" value="Thanh toán khi nhận hàng" />
+                        <div>
+                            <strong>Thanh toán khi nhận hàng</strong>
+                            <span>Khách hàng trả tiền mặt khi nhận sản phẩm.</span>
+                        </div>
+                    </label>
+
+                    <label class="payment-method-card">
+                        <input asp-for="PaymentMethod" type="radio" value="Chuyển khoản ngân hàng" />
+                        <div>
+                            <strong>Chuyển khoản ngân hàng</strong>
+                            <span>Admin xác nhận thanh toán sau khi nhận chuyển khoản.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+
+                <div id="bankTransferBox" class="bank-info-box">
+                    <strong>Quét mã QR để chuyển khoản</strong>
+
+                    <div class="qr-payment-box">
+                        <img src="@qrUrl" alt="QR chuyển khoản @Model.OrderCode" class="qr-payment-image" />
+
+                        <div class="qr-payment-info">
+                            <p><strong>Ngân hàng:</strong> Eximbank</p>
+                            <p><strong>Số tài khoản:</strong> @accountNumber</p>
+                            <p><strong>Chủ tài khoản:</strong> @accountName</p>
+                            <p><strong>Số tiền:</strong> @FormatPrice(Model.Total)</p>
+                            <p><strong>Nội dung CK:</strong> @addInfo</p>
+                            <p><strong>Mã đơn hàng:</strong> @Model.OrderCode</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="payment-summary">
+                <h2>Tóm tắt đơn hàng</h2>
+
+                <div class="payment-items">
+                    @foreach (var item in Model.Items)
+                    {
+                        <div class="payment-item">
+                            <img src="@item.ImageUrl" alt="@item.ProductName" />
+
+                            <div>
+                                <h3>@item.ProductName</h3>
+                                <p>Số lượng: @item.Quantity</p>
+                                <strong>@FormatPrice(item.LineTotal)</strong>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="summary-row">
+                    <span>Số lượng</span>
+                    <strong>@Model.TotalQuantity sản phẩm</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Tạm tính</span>
+                    <strong>@FormatPrice(Model.Total)</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Phí vận chuyển</span>
+                    <strong>Miễn phí</strong>
+                </div>
+
+                <div class="summary-total">
+                    <span>Tổng thanh toán</span>
+                    <strong>@FormatPrice(Model.Total)</strong>
+                </div>
+
+                <button type="submit" class="btn btn-primary full">
+                    Xác nhận đặt hàng
+                </button>
+            </aside>
+        </form>
+
+    </div>
+</main>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function toggleBankTransferBox() {
+            const selectedPayment = document.querySelector('input[name="PaymentMethod"]:checked');
+            const bankBox = document.getElementById("bankTransferBox");
+
+            if (!selectedPayment || !bankBox) return;
+
+            if (selectedPayment.value === "Chuyển khoản ngân hàng") {
+                bankBox.style.display = "block";
+            } else {
+                bankBox.style.display = "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const radios = document.querySelectorAll('input[name="PaymentMethod"]');
+
+            radios.forEach(radio => {
+                radio.addEventListener("change", toggleBankTransferBox);
+            });
+
+            toggleBankTransferBox();
+        });
+        function setupNoNoteToggle() {
+            const toggle = document.getElementById("noNoteToggle");
+            const noteBox = document.getElementById("noteInputBox");
+            const noteTextarea = document.getElementById("noteTextarea");
+
+            if (!toggle || !noteBox || !noteTextarea) return;
+
+            function updateNoteState() {
+                if (toggle.checked) {
+                    noteTextarea.value = "";
+                    noteTextarea.disabled = true;
+                    noteBox.classList.add("is-disabled");
+                } else {
+                    noteTextarea.disabled = false;
+                    noteBox.classList.remove("is-disabled");
+                    noteTextarea.focus();
+                }
+            }
+
+            toggle.addEventListener("change", updateNoteState);
+            updateNoteState();
+        }
+
+        document.addEventListener("DOMContentLoaded", setupNoNoteToggle);
+    </script>
+}

@@ -1,0 +1,44 @@
+﻿@model MenStyle.Web.Models.Product
+
+@{
+    ViewData["Title"] = "Xóa sản phẩm";
+}
+
+<main class="admin-crud-page">
+    <div class="container">
+        <div class="delete-card">
+            <p class="eyebrow">ADMIN</p>
+
+            <h1>Xóa sản phẩm</h1>
+
+            <p>
+                Bạn có chắc chắn muốn xóa sản phẩm
+                <strong>@Model.Name</strong>
+                không? Thao tác này sẽ xóa khỏi bảng Products.
+            </p>
+
+            <div class="edit-preview-card">
+                <img src="@Model.ImageUrl" alt="@Model.AltText" />
+                <p>@Model.Name</p>
+            </div>
+
+            <form asp-controller="AdminProducts"
+                  asp-action="Delete"
+                  asp-route-id="@Model.Id"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <button type="submit" class="delete-btn">
+                    Xác nhận xóa
+                </button>
+
+                <a class="edit-btn"
+                   asp-controller="AdminProducts"
+                   asp-action="Index">
+                    Hủy
+                </a>
+            </form>
+        </div>
+    </div>
+</main>

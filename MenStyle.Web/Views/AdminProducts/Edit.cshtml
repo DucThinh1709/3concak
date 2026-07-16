@@ -1,0 +1,106 @@
+﻿@model MenStyle.Web.Models.Product
+
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+}
+
+<main class="admin-crud-page">
+    <div class="container">
+
+        <div class="admin-crud-header">
+            <div>
+                <p class="eyebrow">ADMIN</p>
+                <h1>Sửa sản phẩm</h1>
+                <p>Cập nhật sản phẩm và lưu trực tiếp vào SQL Server.</p>
+            </div>
+
+            <a class="btn btn-outline" asp-controller="AdminProducts" asp-action="Index">
+                Quay lại
+            </a>
+        </div>
+
+        <form asp-controller="AdminProducts"
+              asp-action="Edit"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="admin-form-card">
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="CreatedAt" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger validation-box"></div>
+
+            <div class="edit-preview-card">
+                <p>Ảnh hiện tại</p>
+                <img src="@Model.ImageUrl" alt="@Model.AltText" />
+                <span>@Model.ImageUrl</span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Name">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CategoryName">Tên danh mục</label>
+                    <input asp-for="CategoryName" class="form-control" />
+                    <span asp-validation-for="CategoryName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="CategorySlug">Mã danh mục</label>
+                    <input asp-for="CategorySlug" class="form-control" />
+                    <span asp-validation-for="CategorySlug" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Price">Giá bán</label>
+                    <input asp-for="Price" class="form-control" type="number" min="0" step="1000" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="OldPrice">Giá cũ</label>
+                    <input asp-for="OldPrice" class="form-control" type="number" min="0" step="1000" />
+                    <span asp-validation-for="OldPrice" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ImageUrl">Đường dẫn ảnh</label>
+                    <input asp-for="ImageUrl" class="form-control" />
+                    <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AltText">Mô tả ảnh</label>
+                <input asp-for="AltText" class="form-control" />
+                <span asp-validation-for="AltText" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input asp-for="IsActive" />
+                    Đang hiển thị sản phẩm
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Lưu thay đổi
+            </button>
+        </form>
+
+    </div>
+</main>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
