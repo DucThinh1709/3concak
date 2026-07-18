@@ -65,10 +65,106 @@
                     Trang chủ
                 </a>
 
-                <a asp-controller="Home"
-                   asp-action="SanPham">
-                    Sản phẩm
-                </a>
+                <div class="nav-mega-item">
+                    <a class="nav-link mega-trigger"
+                       asp-controller="Home"
+                       asp-action="SanPham">
+                        Sản phẩm <span>⌄</span>
+                    </a>
+
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column">
+                                <h3>ÁO NAM</h3>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-category="ao-thun">
+                                    Áo Thun
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Áo Polo">
+                                    Áo Polo
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-category="ao-so-mi">
+                                    Áo Sơ mi
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-category="ao-khoac">
+                                    Áo Khoác
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Hoodie">
+                                    Hoodie
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Set đồ">
+                                    Set đồ
+                                </a>
+                            </div>
+
+                            <div class="mega-column">
+                                <h3>QUẦN NAM</h3>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-category="quan-nam">
+                                    Quần Jean
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Quần Short">
+                                    Quần Short
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Quần Kaki">
+                                    Quần Kaki & Chino
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Quần Jogger">
+                                    Quần Jogger
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Quần Tây">
+                                    Quần Tây
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Set đồ">
+                                    Set Đồ
+                                </a>
+                            </div>
+
+                            <div class="mega-column mega-highlight">
+                                <span>New</span>
+                                <h3>HÀNG MỚI</h3>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-sort="default">
+                                    Sản phẩm mới nhất
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="basic">
+                                    Basic dễ phối
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="oversize">
+                                    Oversize
+                                </a>
+                            </div>
+
+                            <div class="mega-column">
+                                <h3>HÀNG BÁN CHẠY</h3>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Áo thun">
+                                    Áo thun bán chạy
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Áo sơ mi">
+                                    Sơ mi được yêu thích
+                                </a>
+
+                                <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="Áo khoác">
+                                    Áo khoác nổi bật
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <a asp-controller="Home" 
                    asp-action="BoSuuTap">

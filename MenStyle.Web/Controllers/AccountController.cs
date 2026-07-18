@@ -167,13 +167,16 @@ namespace MenStyle.Web.Controllers
                 return RedirectToAction("Login");
             }
 
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
             var model = new ProfileViewModel
             {
-                Email = user.Email ?? "",
                 FullName = user.FullName,
+                Email = user.Email ?? "",
                 PhoneNumber = user.PhoneNumber ?? "",
-                Address = user.Address,
                 Gender = user.Gender,
+                Address = user.Address,
+                AvatarUrl = user.AvatarUrl,
                 CreatedAt = user.CreatedAt
             };
 
@@ -192,45 +195,88 @@ namespace MenStyle.Web.Controllers
                 return RedirectToAction("Login");
             }
 
-            model.Email = user.Email ?? "";
-            model.CreatedAt = user.CreatedAt;
+            ModelState.Remove(nameof(model.Email));
+            ModelState.Remove(nameof(model.CreatedAt));
+            ModelState.Remove(nameof(model.AvatarUrl));
 
             if (!ModelState.IsValid)
             {
-                return View(model);
-            }
+                model.Email = user.Email ?? "";
+                model.CreatedAt = user.CreatedAt;
+                model.AvatarUrl = user.AvatarUrl;
 
-            var phoneExists = _userManager.Users
-                .Any(u => u.PhoneNumber == model.PhoneNumber && u.Id != user.Id);
-
-            if (phoneExists)
-            {
-                ModelState.AddModelError(nameof(model.PhoneNumber), "Số điện thoại này đã được tài khoản khác sử dụng.");
                 return View(model);
             }
 
             user.FullName = model.FullName.Trim();
-            user.PhoneNumber = model.PhoneNumber.Trim();
-            user.Address = model.Address.Trim();
-            user.Gender = model.Gender;
-            user.SecurityStamp = Guid.NewGuid().ToString();
+            user.PhoneNumber = model.PhoneNumber?.Trim() ?? "";
+            user.Gender = model.Gender?.Trim() ?? "";
+            user.Address = model.Address?.Trim() ?? "";
+
+            if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+                var extension = Path.GetExtension(model.AvatarFile.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    ModelState.AddModelError(nameof(model.AvatarFile), "Chỉ cho phép ảnh .jpg, .jpeg, .png hoặc .webp.");
+
+                    model.Email = user.Email ?? "";
+                    model.CreatedAt = user.CreatedAt;
+                    model.AvatarUrl = user.AvatarUrl;
+
+                    return View(model);
+                }
+
+                if (model.AvatarFile.Length > 2 * 1024 * 1024)
+                {
+                    ModelState.AddModelError(nameof(model.AvatarFile), "Ảnh đại diện không được vượt quá 2MB.");
+
+                    model.Email = user.Email ?? "";
+                    model.CreatedAt = user.CreatedAt;
+                    model.AvatarUrl = user.AvatarUrl;
+
+                    return View(model);
+                }
+
+                var avatarFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "avatars");
+
+                if (!Directory.Exists(avatarFolder))
+                {
+                    Directory.CreateDirectory(avatarFolder);
+                }
+
+                var fileName = $"{user.Id}_{Guid.NewGuid():N}{extension}";
+                var filePath = Path.Combine(avatarFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.AvatarFile.CopyToAsync(stream);
+                }
+
+                user.AvatarUrl = $"/images/avatars/{fileName}";
+            }
 
             var result = await _userManager.UpdateAsync(user);
 
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                await _signInManager.RefreshSignInAsync(user);
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
 
-                TempData["SuccessMessage"] = "Thông tin cá nhân đã được lưu thành công.";
-                return RedirectToAction("Profile");
+                model.Email = user.Email ?? "";
+                model.CreatedAt = user.CreatedAt;
+                model.AvatarUrl = user.AvatarUrl;
+
+                return View(model);
             }
 
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
+            TempData["SuccessMessage"] = "Đã lưu thông tin cá nhân.";
 
-            return View(model);
+            return RedirectToAction(nameof(Profile));
         }
 
         [Authorize]

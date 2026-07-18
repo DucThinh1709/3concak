@@ -15,10 +15,6 @@
                     Quản lý thông tin cá nhân, địa chỉ giao hàng và thông tin liên hệ của bạn.
                 </p>
             </div>
-
-            <div class="profile-avatar">
-                <span>@(string.IsNullOrWhiteSpace(Model.FullName) ? "M" : Model.FullName.Trim()[0])</span>
-            </div>
         </section>
 
         @if (TempData["SuccessMessage"] is string successMessage)
@@ -30,17 +26,34 @@
 
             <aside class="profile-sidebar">
                 <div class="profile-user-card">
-                    <div class="profile-avatar small">
-                        <span>@(string.IsNullOrWhiteSpace(Model.FullName) ? "M" : Model.FullName.Trim()[0])</span>
+                    <div class="profile-avatar small" id="sideAvatarPreview">
+                        @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                        {
+                            <img src="@Model.AvatarUrl" alt="Ảnh đại diện" />
+                        }
+                        else
+                        {
+                            <span>@(string.IsNullOrWhiteSpace(Model.FullName) ? "M" : Model.FullName.Trim()[0].ToString().ToUpper())</span>
+                        }
                     </div>
 
                     <h2>@Model.FullName</h2>
                     <p>@Model.Email</p>
 
-                    <div class="profile-status">
-                        <span></span>
-                        Tài khoản khách hàng
-                    </div>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="profile-badge admin">
+                            <span></span>
+                            Tài khoản quản trị
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="profile-badge customer">
+                            <span></span>
+                            Tài khoản khách hàng
+                        </div>
+                    }
                 </div>
 
                 <div class="profile-menu">
@@ -57,13 +70,42 @@
                             <p class="eyebrow">Profile Details</p>
                             <h2>Thông tin cá nhân</h2>
                         </div>
-                        <span>Dữ liệu được lưu trong SQL Server</span>
                     </div>
 
-                    <form id="profileForm" asp-controller="Account" asp-action="Profile" method="post" class="profile-form">
+                    <form id="profileForm" asp-controller="Account" asp-action="Profile" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
 
                         <div asp-validation-summary="ModelOnly" class="text-danger validation-box"></div>
+                        <div class="avatar-edit-panel">
+                            <div class="avatar-edit-preview" id="formAvatarPreview">
+                                @if (!string.IsNullOrWhiteSpace(Model.AvatarUrl))
+                                {
+                                    <img src="@Model.AvatarUrl" alt="Ảnh đại diện" />
+                                }
+                                else
+                                {
+                                    <span>@(string.IsNullOrWhiteSpace(Model.FullName) ? "M" : Model.FullName.Trim()[0].ToString().ToUpper())</span>
+                                }
+                            </div>
+
+                            <div class="avatar-edit-content">
+                                <h3>Ảnh đại diện</h3>
+                                <p>Chọn ảnh mới để cập nhật ảnh đại diện tài khoản.</p>
+
+                                <label class="avatar-upload-btn" for="avatarFileInput">
+                                    Đổi ảnh đại diện
+                                </label>
+
+                                <input asp-for="AvatarFile"
+                                       id="avatarFileInput"
+                                       type="file"
+                                       accept="image/png,image/jpeg,image/webp" />
+
+                                <span asp-validation-for="AvatarFile" class="text-danger"></span>
+
+                                <small>Chấp nhận JPG, PNG, WEBP. Tối đa 2MB.</small>
+                            </div>
+                        </div>
 
                         <div class="profile-grid">
                             <div class="form-group">
@@ -106,9 +148,12 @@
                                 <input value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")" class="form-control readonly-input" readonly />
                             </div>
 
-                            <div class="form-group">
+                            <div class="profile-field">
                                 <label>Loại tài khoản</label>
-                                <input value="Khách hàng" class="form-control readonly-input" readonly />
+
+                                <div class="form-control locked-display">
+                                    @(User.IsInRole("Admin") ? "Quản trị viên" : "Khách hàng")
+                                </div>
                             </div>
                         </div>
 
@@ -174,5 +219,49 @@
         function submitProfileForm() {
             document.getElementById("profileForm").submit();
         }
+        function setAvatarPreview(containerId, imageUrl) {
+            const container = document.getElementById(containerId);
+
+            if (!container) return;
+
+            container.innerHTML = "";
+
+            const img = document.createElement("img");
+            img.src = imageUrl;
+            img.alt = "Ảnh đại diện";
+
+            container.appendChild(img);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const avatarInput = document.getElementById("avatarFileInput");
+
+            if (!avatarInput) return;
+
+            avatarInput.addEventListener("change", function () {
+                const file = this.files && this.files[0];
+
+                if (!file) return;
+
+                const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+                if (!allowedTypes.includes(file.type)) {
+                    alert("Chỉ cho phép ảnh JPG, PNG hoặc WEBP.");
+                    this.value = "";
+                    return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Ảnh đại diện không được vượt quá 2MB.");
+                    this.value = "";
+                    return;
+                }
+
+                const imageUrl = URL.createObjectURL(file);
+
+                setAvatarPreview("sideAvatarPreview", imageUrl);
+                setAvatarPreview("formAvatarPreview", imageUrl);
+            });
+        });
     </script>
 }

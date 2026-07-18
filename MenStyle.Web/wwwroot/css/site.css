@@ -4999,3 +4999,318 @@ header,
         min-height: 48px;
     }
 }
+.locked-display {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    background: #f3eee7;
+    color: #5f574f;
+    cursor: not-allowed;
+    user-select: none;
+    pointer-events: none;
+}
+.profile-avatar {
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #111111;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 900;
+    margin: 0 auto;
+}
+
+    .profile-avatar.small {
+        width: 78px;
+        height: 78px;
+        font-size: 30px;
+        margin-bottom: 14px;
+    }
+
+    .profile-avatar img,
+    .avatar-edit-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+.avatar-edit-panel {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 20px;
+    margin-bottom: 24px;
+    border-radius: 24px;
+    background: #f7f3ee;
+    border: 1px solid #eadfce;
+}
+
+.avatar-edit-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 26px;
+    overflow: hidden;
+    background: #111111;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    font-weight: 900;
+}
+
+.avatar-edit-content h3 {
+    margin: 0 0 6px;
+    font-size: 22px;
+}
+
+.avatar-edit-content p {
+    margin: 0 0 14px;
+    color: #7d746b;
+}
+
+.avatar-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: #111111;
+    color: #ffffff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.avatar-edit-content input[type="file"] {
+    display: none;
+}
+
+.avatar-edit-content small {
+    display: block;
+    margin-top: 10px;
+    color: #7d746b;
+}
+
+.locked-display {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    background: #f3eee7;
+    color: #5f574f;
+    cursor: not-allowed;
+    user-select: none;
+    pointer-events: none;
+}
+
+@media (max-width: 640px) {
+    .avatar-edit-panel {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .avatar-edit-preview {
+        margin: 0 auto;
+    }
+}
+.profile-hero {
+    display: block;
+}
+
+.profile-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.avatar-edit-panel {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 20px;
+    margin-bottom: 24px;
+    border-radius: 24px;
+    background: #f7f3ee;
+    border: 1px solid #eadfce;
+}
+
+.avatar-edit-preview {
+    width: 96px;
+    height: 96px;
+    border-radius: 26px;
+    overflow: hidden;
+    background: #111111;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    font-weight: 900;
+}
+
+    .avatar-edit-preview img,
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+
+.avatar-edit-content h3 {
+    margin: 0 0 6px;
+    font-size: 22px;
+}
+
+.avatar-edit-content p {
+    margin: 0 0 14px;
+    color: #7d746b;
+}
+
+.avatar-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: #111111;
+    color: #ffffff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.avatar-edit-content input[type="file"] {
+    display: none;
+}
+
+.avatar-edit-content small {
+    display: block;
+    margin-top: 10px;
+    color: #7d746b;
+}
+
+@media (max-width: 640px) {
+    .avatar-edit-panel {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .avatar-edit-preview {
+        margin: 0 auto;
+    }
+}
+/* =========================
+   PRODUCT MEGA MENU
+========================= */
+
+.nav-mega-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mega-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+    .mega-trigger span {
+        font-size: 14px;
+        transform: translateY(1px);
+    }
+
+.mega-menu {
+    position: fixed;
+    top: 100px;
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    background: #ffffff;
+    border-top: 1px solid #eee4d9;
+    border-bottom: 1px solid #eee4d9;
+    box-shadow: 0 26px 60px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: 0.2s ease;
+}
+
+.nav-mega-item:hover .mega-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.mega-menu-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 34px 24px 38px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 44px;
+}
+
+.mega-column {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+    .mega-column h3 {
+        margin: 0 0 10px;
+        color: #111111;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+
+    .mega-column a {
+        color: #111111;
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.3;
+        transition: 0.18s ease;
+    }
+
+        .mega-column a:hover {
+            color: #c89542;
+            transform: translateX(4px);
+        }
+
+.mega-highlight {
+    position: relative;
+}
+
+    .mega-highlight span {
+        color: red;
+        font-weight: 900;
+        font-size: 14px;
+        margin-bottom: -8px;
+    }
+
+/* Đảm bảo header nằm trên content nhưng dưới mega menu */
+.site-header,
+.main-header,
+.navbar,
+.nav-wrapper {
+    position: relative;
+    z-index: 9999;
+}
+
+/* Mobile: ẩn mega menu để không bị rối */
+@media (max-width: 768px) {
+    .mega-menu {
+        display: none;
+    }
+}

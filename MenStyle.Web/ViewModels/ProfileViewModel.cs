@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace MenStyle.Web.ViewModels;
 
@@ -24,6 +25,10 @@ public class ProfileViewModel
     [Required(ErrorMessage = "Vui lòng chọn giới tính")]
     [Display(Name = "Giới tính")]
     public string Gender { get; set; } = string.Empty;
+
+    public string AvatarUrl { get; set; } = string.Empty;
+
+    public IFormFile? AvatarFile { get; set; }
 
     public DateTime CreatedAt { get; set; }
 }

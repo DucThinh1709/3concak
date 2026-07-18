@@ -28,61 +28,6 @@
         </div>
     </section>
 
-    <section class="products section-padding product-category-section">
-        <div class="container">
-
-            <div class="section-head product-page-head">
-                <div class="section-title left">
-                    <p>Danh mục</p>
-                    <h2>Mua theo loại sản phẩm</h2>
-                </div>
-
-                <form asp-controller="Home"
-                      asp-action="SanPham"
-                      method="get"
-                      class="toolbar product-toolbar">
-
-                    <input type="hidden" name="category" value="@Model.SelectedCategory" />
-                    <input type="hidden" name="keyword" value="@Model.Keyword" />
-
-                    <select name="sort" onchange="this.form.submit()">
-                        <option value="default" selected="@(Model.SortOrder == "default" ? "selected" : null)">
-                            Sắp xếp mặc định
-                        </option>
-
-                        <option value="price-asc" selected="@(Model.SortOrder == "price-asc" ? "selected" : null)">
-                            Giá thấp đến cao
-                        </option>
-
-                        <option value="price-desc" selected="@(Model.SortOrder == "price-desc" ? "selected" : null)">
-                            Giá cao đến thấp
-                        </option>
-                    </select>
-                </form>
-            </div>
-
-            <div class="category-grid product-category-grid">
-                @foreach (var category in Model.Categories)
-                {
-                    <a class="category-card @(category.IsActive ? "active" : "")"
-                       asp-controller="Home"
-                       asp-action="SanPham"
-                       asp-route-category="@category.Filter"
-                       asp-route-sort="@Model.SortOrder"
-                       asp-route-keyword="@Model.Keyword">
-
-                        <span>@category.Number</span>
-
-                        <h3>@category.Name</h3>
-
-                        <p>@category.Description</p>
-                    </a>
-                }
-            </div>
-
-        </div>
-    </section>
-
     <section class="products section-padding product-list-section">
         <div class="container">
 

@@ -16,5 +16,9 @@ namespace MenStyle.Web.Models
         public string Gender { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [StringLength(500)]
+        public string AvatarUrl { get; set; } = string.Empty;
+        
     }
 }
