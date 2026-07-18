@@ -43,4 +43,9 @@ public class CustomerOrder
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public List<CustomerOrderItem> Items { get; set; } = [];
+    public double? ShippingLatitude { get; set; }
+
+    public double? ShippingLongitude { get; set; }
+
+
 }

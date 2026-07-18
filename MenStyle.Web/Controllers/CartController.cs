@@ -359,6 +359,18 @@ public class CartController : Controller
             model.Note = "";
         }
 
+        if (model.ShippingLatitude == null || model.ShippingLongitude == null)
+        {
+            ModelState.AddModelError(nameof(model.ShippingAddress),
+                "Vui lòng chọn vị trí giao hàng trên bản đồ.");
+        }
+
+        if (!model.IsAddressConfirmed)
+        {
+            ModelState.AddModelError(nameof(model.ShippingAddress),
+                "Vui lòng bấm Xác nhận địa chỉ trước khi đặt hàng.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -390,6 +402,8 @@ public class CartController : Controller
             CustomerName = model.CustomerName.Trim(),
             PhoneNumber = model.PhoneNumber.Trim(),
             ShippingAddress = model.ShippingAddress.Trim(),
+            ShippingLatitude = model.ShippingLatitude,
+            ShippingLongitude = model.ShippingLongitude,
             PaymentMethod = model.PaymentMethod,
             PaymentStatus = paymentStatus,
             Note = model.NoNote ? "" : model.Note?.Trim() ?? "",

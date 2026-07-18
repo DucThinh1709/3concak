@@ -37,4 +37,9 @@ public class CheckoutViewModel
     [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự")]
     [Display(Name = "Ghi chú")]
     public string? Note { get; set; }
+    public double? ShippingLatitude { get; set; }
+
+    public double? ShippingLongitude { get; set; }
+
+    public bool IsAddressConfirmed { get; set; }
 }

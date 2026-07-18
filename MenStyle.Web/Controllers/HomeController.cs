@@ -212,10 +212,8 @@ public class HomeController : Controller
         "Xám",
         "Nâu",
         "Be",
-        "Xanh navy",
-        "Xanh rêu",
         "Xanh dương",
-        "Đỏ đô",
+        "Đỏ",
         "Kem"
     };
 
