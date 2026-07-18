@@ -1,0 +1,258 @@
+﻿@using System.Text.Json
+@model MenStyle.Web.ViewModels.ProductDetailViewModel
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+
+    var defaultSize = Model.Sizes.FirstOrDefault() ?? "";
+    var defaultColor = Model.Colors.FirstOrDefault() ?? "";
+}
+
+<main class="product-detail-page">
+
+    <section class="product-detail-section">
+        <div class="container product-detail-layout">
+
+            <div class="product-detail-gallery">
+                <div class="product-detail-image">
+                    <img id="mainProductImage"
+                         src="@Model.Product.ImageUrl"
+                         alt="@Model.Product.AltText" />
+                </div>
+
+                <div class="product-detail-badges">
+                    <span>@Model.Product.CategoryName</span>
+
+                    @if (Model.Product.OldPrice > Model.Product.Price)
+                    {
+                        <span>Đang giảm giá</span>
+                    }
+
+                    @if (Model.Product.StockQuantity > 0)
+                    {
+                        <span>Còn hàng</span>
+                    }
+                    else
+                    {
+                        <span>Hết hàng</span>
+                    }
+                </div>
+            </div>
+
+            <div class="product-detail-info">
+                <p class="eyebrow">MENSTYLE PRODUCT</p>
+
+                <h1>@Model.Product.Name</h1>
+
+                <div class="detail-price-row">
+                    <strong>@FormatPrice(Model.Product.Price)</strong>
+
+                    @if (Model.Product.OldPrice > Model.Product.Price)
+                    {
+                        <del>@FormatPrice(Model.Product.OldPrice)</del>
+                    }
+                </div>
+
+                <p class="detail-description">
+                    @Model.Product.Description
+                </p>
+
+                <div class="detail-meta-grid">
+                    <div>
+                        <span>Chất liệu</span>
+                        <strong>@Model.Product.Material</strong>
+                    </div>
+
+                    <div>
+                        <span>Form dáng</span>
+                        <strong>@Model.Product.Fit</strong>
+                    </div>
+
+                    <div>
+                        <span>Tồn kho</span>
+                        <strong>@Model.Product.StockQuantity sản phẩm</strong>
+                    </div>
+
+                    <div>
+                        <span>Danh mục</span>
+                        <strong>@Model.Product.CategoryName</strong>
+                    </div>
+                </div>
+
+                <form asp-controller="Cart"
+                      asp-action="Add"
+                      asp-route-id="@Model.Product.Id"
+                      method="post"
+                      class="detail-add-cart-form">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="returnUrl"
+                           value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
+
+                    <div class="detail-option-group">
+                        <label>Chọn size</label>
+
+                        <div class="size-option-list">
+                            @foreach (var size in Model.Sizes)
+                            {
+                                <label class="size-option">
+                                    <input type="radio"
+                                           name="selectedSize"
+                                           value="@size"
+                                           checked="@(size == defaultSize)" />
+                                    <span>@size</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="detail-option-group">
+                        <label>Chọn màu sắc</label>
+
+                        <div class="color-option-list">
+                            @foreach (var color in Model.Colors)
+                            {
+                                var colorImage = Model.ColorImages.ContainsKey(color)
+                                    ? Model.ColorImages[color]
+                                    : Model.Product.ImageUrl;
+
+                                <label class="color-option">
+                                    <input type="radio"
+                                           name="selectedColor"
+                                           value="@color"
+                                           data-image="@colorImage"
+                                           checked="@(color == defaultColor)" />
+                                    <span>@color</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="detail-quantity-box">
+                        <label>Số lượng</label>
+
+                        <input type="number"
+                               name="quantity"
+                               value="1"
+                               min="1"
+                               max="@Model.Product.StockQuantity" />
+                    </div>
+
+                    @if (Model.Product.StockQuantity > 0)
+                    {
+                        <button type="submit" class="btn btn-primary detail-cart-btn">
+                            Thêm vào giỏ hàng
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary detail-cart-btn" disabled>
+                            Sản phẩm đã hết hàng
+                        </button>
+                    }
+                </form>
+
+                <div class="care-box">
+                    <h3>Hướng dẫn bảo quản</h3>
+                    <p>@Model.Product.CareInstruction</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="related-products-section">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Related Products</p>
+                    <h2>Sản phẩm liên quan</h2>
+                </div>
+
+                <a class="btn btn-outline"
+                   asp-controller="Home"
+                   asp-action="SanPham"
+                   asp-route-category="@Model.Product.CategorySlug">
+                    Xem thêm
+                </a>
+            </div>
+
+            @if (!Model.RelatedProducts.Any())
+            {
+                <div class="empty-collection">
+                    Chưa có sản phẩm liên quan.
+                </div>
+            }
+            else
+            {
+                <div class="product-grid">
+                    @foreach (var product in Model.RelatedProducts)
+                    {
+                        <article class="product-card">
+                            <a class="product-img"
+                               asp-controller="Home"
+                               asp-action="ChiTietSanPham"
+                               asp-route-id="@product.Id">
+                                <img src="@product.ImageUrl" alt="@product.AltText" />
+                            </a>
+
+                            <div class="product-info">
+                                <p class="tag">@product.CategoryName</p>
+
+                                <h3>
+                                    <a asp-controller="Home"
+                                       asp-action="ChiTietSanPham"
+                                       asp-route-id="@product.Id">
+                                        @product.Name
+                                    </a>
+                                </h3>
+
+                                <div class="price-row">
+                                    <strong>@FormatPrice(product.Price)</strong>
+
+                                    @if (product.OldPrice > product.Price)
+                                    {
+                                        <span>@FormatPrice(product.OldPrice)</span>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+</main>
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const mainImage = document.getElementById("mainProductImage");
+            const colorRadios = document.querySelectorAll('input[name="selectedColor"]');
+
+            if (!mainImage || colorRadios.length === 0) return;
+
+            colorRadios.forEach(radio => {
+                radio.addEventListener("change", function () {
+                    const newImage = this.dataset.image;
+
+                    if (!newImage) return;
+
+                    mainImage.classList.add("is-changing");
+
+                    setTimeout(() => {
+                        mainImage.src = newImage;
+                        mainImage.classList.remove("is-changing");
+                    }, 120);
+                });
+            });
+        });
+    </script>
+}

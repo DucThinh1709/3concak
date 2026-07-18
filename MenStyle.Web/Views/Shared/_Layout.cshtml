@@ -75,11 +75,6 @@
                    Bộ sưu tập
                </a>
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   asp-fragment="contact">
-                    Liên hệ
-                </a>
             </div>
 
             <div class="nav-actions">
@@ -181,5 +176,6 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+    <partial name="_Chatbot" />
 </body>
 </html>

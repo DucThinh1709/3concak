@@ -1,7 +1,22 @@
 @model HomeViewModel
 
 @{
-    ViewData["Title"] = "Demo Website Bán Quần Áo Nam";
+    ViewData["Title"] = "MenStyle For Men";
+
+    var heroImage = Model.HeroProduct?.ImageUrl ?? "/images/hero-fashion.svg";
+    var heroAlt = Model.HeroProduct?.AltText ?? "MENSTYLE hero image";
+
+    var introCards = new[]
+    {
+        new { Label = "Phong cách", Title = "Modern", Text = "Thiết kế dành cho nam giới trẻ trung, lịch lãm và năng động." },
+        new { Label = "Sản phẩm", Title = "Đa dạng", Text = "Áo thun, sơ mi, quần nam, áo khoác và các item basic dễ phối." },
+        new { Label = "Mua sắm", Title = "Dễ dùng", Text = "Khách hàng có thể xem sản phẩm, thêm vào giỏ và đặt hàng nhanh." },
+        new { Label = "Quản trị", Title = "Rõ ràng", Text = "Có khu vực quản lý đơn hàng, sản phẩm, khách hàng và doanh thu." }
+    };
+
+    var sliderProducts = Model.SliderProducts.Any()
+        ? Model.SliderProducts
+        : Model.IntroProducts;
 }
 
 <main>
@@ -25,7 +40,9 @@
                         Mua ngay
                     </a>
 
-                    <a class="btn btn-outline" href="#collection">
+                    <a class="btn btn-outline"
+                       asp-controller="Home"
+                       asp-action="BoSuuTap">
                         Xem bộ sưu tập
                     </a>
                 </div>
@@ -50,179 +67,166 @@
 
             <div class="hero-card">
                 <div class="hero-image-frame">
-                    <img src="~/images/hero-fashion.svg"
-                         alt="Nam mặc thời trang hiện đại"
-                         asp-append-version="true" />
+                    <img src="@heroImage" alt="@heroAlt" />
                 </div>
 
                 <div class="floating-card sale-card">
                     <span>Flash Sale</span>
                     <strong>-30%</strong>
                 </div>
-
-                <div class="floating-card style-card">
-                    <span>Style</span>
-                    <strong>Smart Casual</strong>
-                </div>
             </div>
         </div>
     </section>
 
-    <section class="home-intro section-padding">
+    <section class="home-overview-section">
         <div class="container">
             <div class="section-title">
                 <p>MenStyle Shop</p>
                 <h2>Trang chủ giới thiệu tổng quan cửa hàng</h2>
             </div>
 
-            <div class="dashboard-grid">
-                <div class="metric-card">
-                    <span>Phong cách</span>
-                    <strong>Modern</strong>
-                    <p>Thiết kế dành cho nam giới trẻ trung, lịch lãm và năng động.</p>
-                </div>
+            <div class="overview-product-grid">
+                @for (int i = 0; i < introCards.Length; i++)
+                {
+                    var card = introCards[i];
+                    var product = Model.IntroProducts.ElementAtOrDefault(i);
 
-                <div class="metric-card">
-                    <span>Sản phẩm</span>
-                    <strong>Đa dạng</strong>
-                    <p>Áo thun, sơ mi, quần nam, áo khoác và các item basic dễ phối.</p>
-                </div>
+                    var imageUrl = product?.ImageUrl ?? "/images/hero-fashion.svg";
+                    var imageAlt = product?.AltText ?? card.Title;
 
-                <div class="metric-card">
-                    <span>Mua sắm</span>
-                    <strong>Dễ dùng</strong>
-                    <p>Khách hàng có thể xem sản phẩm, thêm vào giỏ và đặt hàng nhanh.</p>
-                </div>
+                    <article class="overview-product-card">
+                        <div class="overview-card-image">
+                            <img src="@imageUrl" alt="@imageAlt" />
+                        </div>
 
-                <div class="metric-card">
-                    <span>Quản trị</span>
-                    <strong>Rõ ràng</strong>
-                    <p>Có khu vực quản lý đơn hàng, sản phẩm, khách hàng và doanh thu.</p>
-                </div>
+                        <div class="overview-card-content">
+                            <span>@card.Label</span>
+                            <strong>@card.Title</strong>
+                            <p>@card.Text</p>
+                        </div>
+                    </article>
+                }
             </div>
         </div>
     </section>
 
-    <section id="collection" class="collection section-padding">
-        <div class="container collection-grid">
-            <div class="collection-banner dark">
-                <p>Smart Casual</p>
+    <section id="collection" class="home-product-marquee-section">
+        <div class="container">
+            <div class="product-marquee-layout">
+                <div class="product-marquee-content">
+                    <p class="eyebrow">Smart Casual</p>
 
-                <h2>Phối đồ đi học, đi làm, đi chơi đều ổn</h2>
+                    <h2>Phối đồ đi học, đi làm, đi chơi đều ổn</h2>
 
-                <a asp-controller="Home"
-                   asp-action="SanPham">
-                    Khám phá ngay →
-                </a>
-            </div>
+                    <p>
+                        Khám phá các sản phẩm nổi bật của MENSTYLE với phong cách hiện đại,
+                        dễ phối đồ và phù hợp nhiều hoàn cảnh.
+                    </p>
 
-            <div class="collection-banner light">
-                <p>Best Seller</p>
-
-                <h2>Áo thun basic và sơ mi Oxford đang được yêu thích</h2>
-
-                <a asp-controller="Home"
-                   asp-action="SanPham">
-                    Xem sản phẩm →
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section class="checkout-demo section-padding">
-        <div class="container checkout-grid">
-            <div>
-                <div class="section-title left">
-                    <p>Quy trình mua hàng</p>
-                    <h2>Luồng chức năng khách hàng</h2>
-                </div>
-
-                <div class="timeline">
-                    <div>
-                        <span>1</span>
-                        <p>Xem danh sách sản phẩm ở trang Sản phẩm</p>
-                    </div>
-
-                    <div>
-                        <span>2</span>
-                        <p>Chọn sản phẩm và thêm vào giỏ hàng</p>
-                    </div>
-
-                    <div>
-                        <span>3</span>
-                        <p>Nhập thông tin giao hàng</p>
-                    </div>
-
-                    <div>
-                        <span>4</span>
-                        <p>Đặt hàng và theo dõi trạng thái đơn</p>
-                    </div>
-                </div>
-
-                <div style="margin-top: 28px;">
                     <a class="btn btn-primary"
                        asp-controller="Home"
                        asp-action="SanPham">
-                        Đi đến trang sản phẩm
+                        Xem sản phẩm
                     </a>
                 </div>
-            </div>
-        </div>
-    </section>
 
-    <section id="admin-preview" class="admin-preview section-padding">
-        <div class="container">
-            <div class="section-title">
-                <p>Admin Dashboard</p>
-                <h2>Khu vực quản trị mẫu</h2>
-            </div>
-
-            <div class="dashboard-grid">
-                @foreach (var metric in Model.Metrics)
-                {
-                    <div class="metric-card">
-                        <span>@metric.Title</span>
-                        <strong>@metric.Value</strong>
-                        <p>@metric.Note</p>
-                    </div>
-                }
-            </div>
-
-            <div class="admin-table-card">
-                <div class="table-head">
-                    <h3>Đơn hàng gần đây</h3>
-                    <button type="button">Quản lý đơn</button>
-                </div>
-
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mã đơn</th>
-                                <th>Khách hàng</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @foreach (var order in Model.RecentOrders)
+                <div class="product-marquee-box">
+                    @if (sliderProducts.Any())
+                    {
+                        <div class="product-marquee-track">
+                            @foreach (var product in sliderProducts.Concat(sliderProducts))
                             {
-                                <tr>
-                                    <td>@order.Code</td>
-                                    <td>@order.CustomerName</td>
-                                    <td>@order.Total</td>
-                                    <td>
-                                        <span class="status @order.StatusCssClass">
-                                            @order.Status
-                                        </span>
-                                    </td>
-                                </tr>
+                                <a class="marquee-product-card"
+                                   asp-controller="Home"
+                                   asp-action="ChiTietSanPham"
+                                   asp-route-id="@product.Id">
+                                    <img src="@product.ImageUrl" alt="@product.AltText" />
+                                    <span>@product.Name</span>
+                                </a>
                             }
-                        </tbody>
-                    </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-marquee">
+                            Chưa có sản phẩm để hiển thị.
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </section>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <section id="admin-preview" class="admin-preview section-padding">
+            <div class="container">
+                <div class="section-title">
+                    <p>Admin Dashboard</p>
+                    <h2>Khu vực quản trị mẫu</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    @foreach (var metric in Model.Metrics)
+                    {
+                        <div class="metric-card">
+                            <span>@metric.Title</span>
+                            <strong>@metric.Value</strong>
+                            <p>@metric.Note</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="admin-table-card">
+                    <div class="table-head">
+                        <h3>Đơn hàng gần đây</h3>
+
+                        <a class="admin-table-btn"
+                           asp-controller="AdminOrders"
+                           asp-action="Index">
+                            Quản lý đơn
+                        </a>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @if (!Model.RecentOrders.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4">Chưa có đơn hàng nào.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    foreach (var order in Model.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td>@order.Code</td>
+                                            <td>@order.CustomerName</td>
+                                            <td>@order.Total</td>
+                                            <td>
+                                                <span class="status @order.StatusCssClass">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
 </main>

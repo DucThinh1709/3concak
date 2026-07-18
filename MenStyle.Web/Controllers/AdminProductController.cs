@@ -49,6 +49,7 @@ public class AdminProductsController : Controller
         model.CategoryName = model.CategoryName.Trim();
         model.ImageUrl = model.ImageUrl.Trim();
         model.AltText = model.AltText?.Trim() ?? "";
+        model.ColorImageMap = model.ColorImageMap?.Trim() ?? "";
         model.CreatedAt = DateTime.Now;
 
         _context.Products.Add(model);
@@ -99,6 +100,7 @@ public class AdminProductsController : Controller
         product.OldPrice = model.OldPrice;
         product.ImageUrl = model.ImageUrl.Trim();
         product.AltText = model.AltText?.Trim() ?? "";
+        product.ColorImageMap = model.ColorImageMap?.Trim() ?? "";
         product.IsActive = model.IsActive;
 
         await _context.SaveChangesAsync();

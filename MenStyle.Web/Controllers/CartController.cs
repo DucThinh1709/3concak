@@ -43,7 +43,12 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Add(int id, string? returnUrl = null)
+    public async Task<IActionResult> Add(
+    int id,
+    string? selectedSize = null,
+    string? selectedColor = null,
+    int quantity = 1,
+    string? returnUrl = null)
     {
         var user = await _userManager.GetUserAsync(User);
 
@@ -65,8 +70,52 @@ public class CartController : Controller
             return NotFound();
         }
 
+        var sizes = SplitOptions(product.AvailableSizes);
+        var colors = SplitOptions(product.AvailableColors);
+
+        if (!colors.Any())
+        {
+            colors = GenerateRandomColors(product.Id);
+        }
+
+        var finalSize = string.IsNullOrWhiteSpace(selectedSize)
+            ? sizes.FirstOrDefault() ?? ""
+            : selectedSize.Trim();
+
+        var finalColor = string.IsNullOrWhiteSpace(selectedColor)
+            ? colors.FirstOrDefault() ?? ""
+            : selectedColor.Trim();
+
+        var selectedImageUrl = GetSelectedImageUrl(product, finalColor);
+
+        if (sizes.Any() && !sizes.Contains(finalSize))
+        {
+            ModelState.AddModelError(string.Empty, "Size không hợp lệ.");
+            return RedirectToAction("ChiTietSanPham", "Home", new { id });
+        }
+
+        if (colors.Any() && !colors.Contains(finalColor))
+        {
+            ModelState.AddModelError(string.Empty, "Màu sắc không hợp lệ.");
+            return RedirectToAction("ChiTietSanPham", "Home", new { id });
+        }
+
+        if (quantity < 1)
+        {
+            quantity = 1;
+        }
+
+        if (product.StockQuantity > 0 && quantity > product.StockQuantity)
+        {
+            quantity = product.StockQuantity;
+        }
+
         var existingItem = await _context.ShoppingCartItems
-            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == product.Id);
+            .FirstOrDefaultAsync(x =>
+                x.UserId == user.Id
+                && x.ProductId == product.Id
+                && x.SelectedSize == finalSize
+                && x.SelectedColor == finalColor);
 
         if (existingItem == null)
         {
@@ -74,7 +123,10 @@ public class CartController : Controller
             {
                 UserId = user.Id,
                 ProductId = product.Id,
-                Quantity = 1,
+                SelectedSize = finalSize,
+                SelectedColor = finalColor,
+                SelectedImageUrl = selectedImageUrl,
+                Quantity = quantity,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -83,7 +135,8 @@ public class CartController : Controller
         }
         else
         {
-            existingItem.Quantity++;
+            existingItem.Quantity += quantity;
+            existingItem.SelectedImageUrl = selectedImageUrl;
             existingItem.UpdatedAt = DateTime.Now;
         }
 
@@ -99,6 +152,40 @@ public class CartController : Controller
         return RedirectToAction("Index");
     }
 
+    private static List<string> SplitOptions(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private static List<string> GenerateRandomColors(int productId)
+    {
+        var colorPool = new List<string>
+    {
+        "Đen",
+        "Trắng",
+        "Xám",
+        "Nâu",
+        "Be",
+        "Xanh dương",
+        "Đỏ",
+        "Kem"
+    };
+
+        var random = new Random(productId);
+
+        return colorPool
+            .OrderBy(_ => random.Next())
+            .Take(4)
+            .ToList();
+    }
+
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -112,7 +199,7 @@ public class CartController : Controller
         }
 
         var item = await _context.ShoppingCartItems
-            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == id);
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.Id == id);
 
         if (item != null)
         {
@@ -138,7 +225,7 @@ public class CartController : Controller
         }
 
         var item = await _context.ShoppingCartItems
-            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == id);
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.Id == id);
 
         if (item != null)
         {
@@ -172,7 +259,7 @@ public class CartController : Controller
         }
 
         var item = await _context.ShoppingCartItems
-            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.ProductId == id);
+            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.Id == id);
 
         if (item != null)
         {
@@ -314,6 +401,9 @@ public class CartController : Controller
             {
                 ProductId = x.ProductId,
                 ProductName = x.ProductName,
+                SelectedSize = x.SelectedSize,
+                SelectedColor = x.SelectedColor,
+                SelectedImageUrl = x.ImageUrl,
                 Price = x.Price,
                 Quantity = x.Quantity,
                 LineTotal = x.LineTotal
@@ -363,14 +453,59 @@ public class CartController : Controller
             .OrderByDescending(x => x.UpdatedAt)
             .Select(x => new CartItemViewModel
             {
+                CartItemId = x.Id,
                 ProductId = x.ProductId,
                 ProductName = x.Product!.Name,
                 CategoryName = x.Product.CategoryName,
-                ImageUrl = x.Product.ImageUrl,
+                ImageUrl = !string.IsNullOrWhiteSpace(x.SelectedImageUrl)
+                    ? x.SelectedImageUrl
+                    : x.Product.ImageUrl,
+                SelectedSize = x.SelectedSize,
+                SelectedColor = x.SelectedColor,
                 Price = x.Product.Price,
                 Quantity = x.Quantity
             })
             .ToListAsync();
+    }
+
+    private static Dictionary<string, string> ParseColorImageMap(string? value)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return result;
+        }
+
+        var pairs = value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split('=', 2, StringSplitOptions.TrimEntries);
+
+            if (parts.Length == 2
+                && !string.IsNullOrWhiteSpace(parts[0])
+                && !string.IsNullOrWhiteSpace(parts[1]))
+            {
+                result[parts[0]] = parts[1];
+            }
+        }
+
+        return result;
+    }
+
+    private static string GetSelectedImageUrl(Product product, string selectedColor)
+    {
+        var colorImages = ParseColorImageMap(product.ColorImageMap);
+
+        if (!string.IsNullOrWhiteSpace(selectedColor)
+            && colorImages.TryGetValue(selectedColor, out var imageUrl)
+            && !string.IsNullOrWhiteSpace(imageUrl))
+        {
+            return imageUrl;
+        }
+
+        return product.ImageUrl;
     }
 
     private string GenerateOrderCode()

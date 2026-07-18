@@ -15,13 +15,20 @@
             <div>
                 <p class="eyebrow">MENSTYLE Cart</p>
                 <h1>Giỏ hàng của bạn</h1>
-                <p>Kiểm tra sản phẩm, số lượng và tổng tiền trước khi đặt hàng.</p>
+                <p>Kiểm tra sản phẩm, size, màu sắc, số lượng và tổng tiền trước khi đặt hàng.</p>
             </div>
 
-            <a class="btn btn-outline" asp-controller="Home" asp-action="SanPham">
+            <a class="btn btn-outline"
+               asp-controller="Home"
+               asp-action="SanPham">
                 Tiếp tục mua sắm
             </a>
         </div>
+
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="flash-message success">@successMessage</div>
+        }
 
         @if (TempData["ErrorMessage"] is string errorMessage)
         {
@@ -34,7 +41,10 @@
                 <div class="empty-icon">🛒</div>
                 <h2>Giỏ hàng đang trống</h2>
                 <p>Hãy quay lại trang sản phẩm và chọn món đồ bạn thích.</p>
-                <a class="btn btn-primary" asp-controller="Home" asp-action="Index" asp-fragment="products">
+
+                <a class="btn btn-primary"
+                   asp-controller="Home"
+                   asp-action="SanPham">
                     Xem sản phẩm
                 </a>
             </div>
@@ -46,27 +56,57 @@
                     <div class="cart-table">
                         @foreach (var item in Model.Items)
                         {
+                            var hasSize = !string.IsNullOrWhiteSpace(item.SelectedSize);
+                            var hasColor = !string.IsNullOrWhiteSpace(item.SelectedColor);
+
                             <div class="cart-row">
                                 <div class="cart-product">
                                     <img src="@item.ImageUrl" alt="@item.ProductName" />
-                                    <div>
+
+                                    <div class="cart-product-info">
                                         <h3>@item.ProductName</h3>
-                                        <p>@item.CategoryName</p>
-                                        <strong>@FormatPrice(item.Price)</strong>
+
+                                        <p class="cart-category">@item.CategoryName</p>
+
+                                        <div class="cart-variant-info">
+                                            <span class="cart-variant-badge">
+                                                Size: @(hasSize ? item.SelectedSize : "Chưa chọn")
+                                            </span>
+
+                                            <span class="cart-variant-badge">
+                                                Màu: @(hasColor ? item.SelectedColor : "Chưa chọn")
+                                            </span>
+                                        </div>
+
+                                        <strong class="cart-item-price">
+                                            @FormatPrice(item.Price)
+                                        </strong>
                                     </div>
                                 </div>
 
                                 <div class="qty-box">
-                                    <form asp-controller="Cart" asp-action="Decrease" asp-route-id="@item.ProductId" method="post">
+                                    <form asp-controller="Cart"
+                                          asp-action="Decrease"
+                                          asp-route-id="@item.CartItemId"
+                                          method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit">−</button>
+
+                                        <button type="submit" aria-label="Giảm số lượng">
+                                            −
+                                        </button>
                                     </form>
 
                                     <span>@item.Quantity</span>
 
-                                    <form asp-controller="Cart" asp-action="Increase" asp-route-id="@item.ProductId" method="post">
+                                    <form asp-controller="Cart"
+                                          asp-action="Increase"
+                                          asp-route-id="@item.CartItemId"
+                                          method="post">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit">+</button>
+
+                                        <button type="submit" aria-label="Tăng số lượng">
+                                            +
+                                        </button>
                                     </form>
                                 </div>
 
@@ -74,9 +114,15 @@
                                     @FormatPrice(item.LineTotal)
                                 </div>
 
-                                <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductId" method="post">
+                                <form asp-controller="Cart"
+                                      asp-action="Remove"
+                                      asp-route-id="@item.CartItemId"
+                                      method="post">
                                     @Html.AntiForgeryToken()
-                                    <button class="remove-btn" type="submit">Xóa</button>
+
+                                    <button class="remove-btn" type="submit">
+                                        Xóa
+                                    </button>
                                 </form>
                             </div>
                         }
@@ -112,8 +158,11 @@
                         Tiến hành thanh toán
                     </a>
 
-                    <form asp-controller="Cart" asp-action="Clear" method="post">
+                    <form asp-controller="Cart"
+                          asp-action="Clear"
+                          method="post">
                         @Html.AntiForgeryToken()
+
                         <button class="clear-cart-btn" type="submit">
                             Xóa toàn bộ giỏ hàng
                         </button>

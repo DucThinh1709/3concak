@@ -113,16 +113,10 @@
 
                     @if (isAdmin)
                     {
-                        <a class="add-product-btn"
-                           asp-controller="AdminProducts"
-                           asp-action="Create">
-                            + Thêm sản phẩm
-                        </a>
-
                         <a class="manage-product-btn"
                            asp-controller="AdminProducts"
                            asp-action="Index">
-                            Quản lý
+                            Quản lý sản phẩm
                         </a>
                     }
                 </div>
@@ -179,8 +173,8 @@
                         <a class="btn btn-primary"
                            style="margin-top: 18px;"
                            asp-controller="AdminProducts"
-                           asp-action="Create">
-                            + Thêm sản phẩm mới
+                           asp-action="Index">
+                            Vào trang quản lý sản phẩm
                         </a>
                     }
                 </div>
@@ -190,63 +184,40 @@
                 <div class="product-grid">
                     @foreach (var product in Model.Products)
                     {
-                        <article class="product-card"
-                                 data-category="@product.CategorySlug"
-                                 data-name="@product.Name"
-                                 data-price="@product.Price">
-
-                            <div class="product-img">
+                        <article class="product-card">
+                            <a class="product-img"
+                               asp-controller="Home"
+                               asp-action="ChiTietSanPham"
+                               asp-route-id="@product.Id">
                                 <img src="@product.ImageUrl" alt="@product.AltText" />
-                            </div>
+                            </a>
 
                             <div class="product-info">
                                 <p class="tag">@product.CategoryName</p>
 
-                                <h3>@product.Name</h3>
+                                <h3>
+                                    <a asp-controller="Home"
+                                       asp-action="ChiTietSanPham"
+                                       asp-route-id="@product.Id">
+                                        @product.Name
+                                    </a>
+                                </h3>
 
                                 <div class="price-row">
                                     <strong>@FormatPrice(product.Price)</strong>
 
-                                    @if (product.OldPrice > 0)
+                                    @if (product.OldPrice > product.Price)
                                     {
                                         <span>@FormatPrice(product.OldPrice)</span>
                                     }
                                 </div>
 
-                                <form asp-controller="Cart"
-                                      asp-action="Add"
-                                      asp-route-id="@product.Id"
-                                      method="post">
-
-                                    @Html.AntiForgeryToken()
-
-                                    <input type="hidden" name="id" value="@product.Id" />
-
-                                    <input type="hidden"
-                                           name="returnUrl"
-                                           value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
-
-                                    <button class="add-cart" type="submit">
-                                        Thêm vào giỏ
-                                    </button>
-                                </form>
-
-                                @if (isAdmin)
-                                {
-                                    <div class="product-admin-actions">
-                                        <a asp-controller="AdminProducts"
-                                           asp-action="Edit"
-                                           asp-route-id="@product.Id">
-                                            Sửa
-                                        </a>
-
-                                        <a asp-controller="AdminProducts"
-                                           asp-action="Delete"
-                                           asp-route-id="@product.Id">
-                                            Xóa
-                                        </a>
-                                    </div>
-                                }
+                                <a class="product-detail-btn"
+                                   asp-controller="Home"
+                                   asp-action="ChiTietSanPham"
+                                   asp-route-id="@product.Id">
+                                    Xem chi tiết
+                                </a>
                             </div>
                         </article>
                     }

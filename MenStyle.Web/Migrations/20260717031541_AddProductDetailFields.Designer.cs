@@ -4,6 +4,7 @@ using MenStyle.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MenStyle.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717031541_AddProductDetailFields")]
+    partial class AddProductDetailFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -280,16 +283,6 @@ namespace MenStyle.Web.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("SelectedColor")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("SelectedSize")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerOrderId");
@@ -334,11 +327,6 @@ namespace MenStyle.Web.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ColorImageMap")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -389,12 +377,11 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 1,
                             AltText = "Áo thun nam basic đen",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Áo thun",
                             CategorySlug = "ao-thun",
-                            ColorImageMap = "",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.",
                             Fit = "Regular fit",
@@ -410,12 +397,11 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 2,
                             AltText = "Sơ mi Oxford trắng",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Sơ mi",
                             CategorySlug = "so-mi",
-                            ColorImageMap = "",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.",
                             Fit = "Regular fit",
@@ -431,12 +417,11 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 3,
                             AltText = "Quần jeans slim fit",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Quần jeans",
                             CategorySlug = "quan",
-                            ColorImageMap = "",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.",
                             Fit = "Regular fit",
@@ -452,12 +437,11 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 4,
                             AltText = "Áo khoác bomber navy",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Áo khoác",
                             CategorySlug = "ao-khoac",
-                            ColorImageMap = "",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.",
                             Fit = "Regular fit",
@@ -473,12 +457,11 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 5,
                             AltText = "Quần kaki regular fit",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Quần kaki",
                             CategorySlug = "quan",
-                            ColorImageMap = "",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.",
                             Fit = "Regular fit",
@@ -494,12 +477,11 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 6,
                             AltText = "Áo polo nam cao cấp",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Áo polo",
                             CategorySlug = "ao-thun",
-                            ColorImageMap = "",
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.",
                             Fit = "Regular fit",
@@ -552,7 +534,7 @@ namespace MenStyle.Web.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("UserId", "ProductId", "SelectedSize", "SelectedColor")
+                    b.HasIndex("UserId", "ProductId")
                         .IsUnique();
 
                     b.ToTable("ShoppingCartItems");

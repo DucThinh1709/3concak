@@ -1,0 +1,116 @@
+﻿<div class="chatbot-widget">
+    <button type="button" id="chatbotToggle" class="chatbot-toggle">
+        💬
+    </button>
+
+    <div id="chatbotPanel" class="chatbot-panel">
+        <div class="chatbot-header">
+            <div>
+                <strong>MENBOT</strong>
+                <span>Trợ lý MENSTYLE</span>
+            </div>
+
+            <button type="button" id="chatbotClose">×</button>
+        </div>
+
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="chat-message bot">
+                Xin chào, mình là MENBOT. Bạn cần tìm sản phẩm, hỏi thanh toán hay kiểm tra cách đặt hàng?
+            </div>
+        </div>
+
+        <div class="chatbot-quick">
+            <button type="button" data-question="Shop có giao hàng không?">Giao hàng</button>
+            <button type="button" data-question="Thanh toán bằng QR được không?">Thanh toán</button>
+            <button type="button" data-question="Tìm áo thun">Tìm áo thun</button>
+        </div>
+
+        <form id="chatbotForm" class="chatbot-form">
+            <input id="chatbotInput"
+                   type="text"
+                   autocomplete="off"
+                   placeholder="Nhập câu hỏi..." />
+
+            <button type="submit">
+                Gửi
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggle = document.getElementById("chatbotToggle");
+        const panel = document.getElementById("chatbotPanel");
+        const closeBtn = document.getElementById("chatbotClose");
+        const form = document.getElementById("chatbotForm");
+        const input = document.getElementById("chatbotInput");
+        const messages = document.getElementById("chatbotMessages");
+        const quickButtons = document.querySelectorAll(".chatbot-quick button");
+
+        function openChatbot() {
+            panel.classList.add("is-open");
+            input.focus();
+        }
+
+        function closeChatbot() {
+            panel.classList.remove("is-open");
+        }
+
+        function addMessage(text, type) {
+            const div = document.createElement("div");
+            div.className = "chat-message " + type;
+            div.textContent = text;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        async function sendMessage(text) {
+            const message = text.trim();
+
+            if (!message) return;
+
+            addMessage(message, "user");
+            input.value = "";
+
+            try {
+                const response = await fetch("/Chat/Ask", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: message
+                    })
+                });
+
+                const data = await response.json();
+
+                addMessage(data.reply || "MENBOT chưa có câu trả lời phù hợp.", "bot");
+            } catch (error) {
+                addMessage("Có lỗi khi kết nối MENBOT. Bạn thử lại sau nhé.", "bot");
+            }
+        }
+
+        toggle.addEventListener("click", function () {
+            panel.classList.toggle("is-open");
+            if (panel.classList.contains("is-open")) {
+                input.focus();
+            }
+        });
+
+        closeBtn.addEventListener("click", closeChatbot);
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            sendMessage(input.value);
+        });
+
+        quickButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                openChatbot();
+                sendMessage(this.dataset.question || "");
+            });
+        });
+    });
+</script>

@@ -4,6 +4,7 @@ using MenStyle.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MenStyle.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717044359_AddProductColorImageMap")]
+    partial class AddProductColorImageMap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -389,7 +392,7 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 1,
                             AltText = "Áo thun nam basic đen",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Áo thun",
@@ -410,7 +413,7 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 2,
                             AltText = "Sơ mi Oxford trắng",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Sơ mi",
@@ -431,7 +434,7 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 3,
                             AltText = "Quần jeans slim fit",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Quần jeans",
@@ -452,7 +455,7 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 4,
                             AltText = "Áo khoác bomber navy",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Áo khoác",
@@ -473,7 +476,7 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 5,
                             AltText = "Quần kaki regular fit",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Quần kaki",
@@ -494,7 +497,7 @@ namespace MenStyle.Web.Migrations
                         {
                             Id = 6,
                             AltText = "Áo polo nam cao cấp",
-                            AvailableColors = "",
+                            AvailableColors = "Đen,Trắng,Nâu,Xám",
                             AvailableSizes = "S,M,L,XL",
                             CareInstruction = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.",
                             CategoryName = "Áo polo",

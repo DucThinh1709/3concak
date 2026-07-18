@@ -47,10 +47,23 @@ public class HomeController : Controller
             })
             .ToListAsync();
 
+        var activeProducts = await _context.Products
+            .Where(p => p.IsActive)
+            .OrderByDescending(p => p.Id)
+            .ToListAsync();
+
+        var randomProducts = activeProducts
+            .OrderBy(_ => Guid.NewGuid())
+
+            .ToList();
         var viewModel = new HomeViewModel
         {
             Categories = [],
             Products = [],
+
+            HeroProduct = randomProducts.FirstOrDefault(),
+            IntroProducts = randomProducts.Take(4).ToList(),
+            SliderProducts = randomProducts.Take(10).ToList(),
 
             Metrics =
             [
@@ -137,6 +150,107 @@ public class HomeController : Controller
         };
 
         return View(viewModel);
+    }
+
+    public async Task<IActionResult> ChiTietSanPham(int id)
+    {
+        var product = await _context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        var relatedProducts = await _context.Products
+            .AsNoTracking()
+            .Where(p => p.IsActive
+                        && p.Id != product.Id
+                        && p.CategorySlug == product.CategorySlug)
+            .OrderByDescending(p => p.Id)
+            .Take(4)
+            .ToListAsync();
+
+        var colors = SplitOptions(product.AvailableColors);
+
+        if (!colors.Any())
+        {
+            colors = GenerateRandomColors(product.Id);
+        }
+
+        var viewModel = new ProductDetailViewModel
+        {
+            Product = product,
+            RelatedProducts = relatedProducts,
+            Sizes = SplitOptions(product.AvailableSizes),
+            Colors = colors,
+            ColorImages = ParseColorImageMap(product.ColorImageMap)
+        };
+
+        return View(viewModel);
+    }
+
+    private static List<string> SplitOptions(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private static List<string> GenerateRandomColors(int productId)
+    {
+        var colorPool = new List<string>
+    {
+        "Đen",
+        "Trắng",
+        "Xám",
+        "Nâu",
+        "Be",
+        "Xanh navy",
+        "Xanh rêu",
+        "Xanh dương",
+        "Đỏ đô",
+        "Kem"
+    };
+
+        var random = new Random(productId);
+
+        return colorPool
+            .OrderBy(_ => random.Next())
+            .Take(4)
+            .ToList();
+    }
+
+    private static Dictionary<string, string> ParseColorImageMap(string? value)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return result;
+        }
+
+        var pairs = value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split('=', 2, StringSplitOptions.TrimEntries);
+
+            if (parts.Length == 2
+                && !string.IsNullOrWhiteSpace(parts[0])
+                && !string.IsNullOrWhiteSpace(parts[1]))
+            {
+                result[parts[0]] = parts[1];
+            }
+        }
+
+        return result;
     }
 
     public async Task<IActionResult> BoSuuTap()

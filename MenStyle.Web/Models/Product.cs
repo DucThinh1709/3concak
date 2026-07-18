@@ -33,8 +33,32 @@ public class Product
     [StringLength(500, ErrorMessage = "Đường dẫn hình ảnh không được vượt quá 500 ký tự")]
     public string ImageUrl { get; set; } = string.Empty;
 
+    [StringLength(2000)]
+    public string ColorImageMap { get; set; } = string.Empty;
+
     [StringLength(250, ErrorMessage = "Mô tả ảnh không được vượt quá 250 ký tự")]
     public string AltText { get; set; } = string.Empty;
+
+    [StringLength(1000)]
+    public string Description { get; set; } = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.";
+
+    [StringLength(100)]
+    public string Material { get; set; } = "Cotton pha Polyester";
+
+    [StringLength(100)]
+    public string Fit { get; set; } = "Regular fit";
+
+    [StringLength(100)]
+    public string AvailableSizes { get; set; } = "S,M,L,XL";
+
+    [StringLength(150)]
+    public string AvailableColors { get; set; } = string.Empty; 
+
+    [StringLength(500)]
+    public string CareInstruction { get; set; } = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.";
+
+    [Range(0, int.MaxValue)]
+    public int StockQuantity { get; set; } = 20;
 
     public bool IsActive { get; set; } = true;
 

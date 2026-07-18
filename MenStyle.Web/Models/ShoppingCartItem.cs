@@ -16,6 +16,14 @@ public class ShoppingCartItem
 
     public Product? Product { get; set; }
 
+    [StringLength(20)]
+    public string SelectedSize { get; set; } = string.Empty;
+
+    [StringLength(50)]
+    public string SelectedColor { get; set; } = string.Empty;
+
+    [StringLength(1000)]
+    public string SelectedImageUrl { get; set; } = string.Empty;
     public int Quantity { get; set; } = 1;
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;

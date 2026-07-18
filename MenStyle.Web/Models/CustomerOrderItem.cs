@@ -17,6 +17,15 @@ public class CustomerOrderItem
     [StringLength(150)]
     public string ProductName { get; set; } = string.Empty;
 
+    [StringLength(20)]
+    public string SelectedSize { get; set; } = string.Empty;
+
+    [StringLength(50)]
+    public string SelectedColor { get; set; } = string.Empty;
+
+    [StringLength(1000)]
+    public string SelectedImageUrl { get; set; } = string.Empty;
+
     [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
 

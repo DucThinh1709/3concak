@@ -65,8 +65,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ShoppingCartItem>()
-            .HasIndex(x => new { x.UserId, x.ProductId })
-            .IsUnique(); ;
+            .HasIndex(x => new { x.UserId, x.ProductId, x.SelectedSize, x.SelectedColor })
+            .IsUnique();
 
         builder.Entity<Category>().HasData(
             new Category
