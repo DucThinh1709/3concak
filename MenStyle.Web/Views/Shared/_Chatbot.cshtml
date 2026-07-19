@@ -1,35 +1,44 @@
 ﻿<div class="chatbot-widget">
-    <button type="button" id="chatbotToggle" class="chatbot-toggle">
-        💬
+    <button type="button" id="chatbotToggle" class="chatbot-toggle" aria-label="Mở MENBOT">
+        <span>💬</span>
     </button>
 
     <div id="chatbotPanel" class="chatbot-panel">
         <div class="chatbot-header">
             <div>
                 <strong>MENBOT</strong>
-                <span>Trợ lý MENSTYLE</span>
+                <span>Trợ lý mua sắm MENSTYLE</span>
             </div>
 
-            <button type="button" id="chatbotClose">×</button>
+            <div class="chatbot-header-actions">
+                <button type="button" id="chatbotClear" title="Xóa hội thoại">
+                    Xóa
+                </button>
+
+                <button type="button" id="chatbotClose" aria-label="Đóng MENBOT">
+                    ×
+                </button>
+            </div>
+        </div>
+
+        <div class="chatbot-suggest-bar">
+            <button type="button" data-question="Sản phẩm đang sale">Sale</button>
+            <button type="button" data-question="Tìm áo thun dưới 300k">Dưới 300k</button>
+            <button type="button" data-question="Kiểm tra giỏ hàng của tôi">Giỏ hàng</button>
+            <button type="button" data-question="Xem đơn hàng của tôi">Đơn hàng</button>
         </div>
 
         <div id="chatbotMessages" class="chatbot-messages">
             <div class="chat-message bot">
-                Xin chào, mình là MENBOT. Bạn cần tìm sản phẩm, hỏi thanh toán hay kiểm tra cách đặt hàng?
+                Xin chào, mình là MENBOT. Bạn có thể hỏi: “Tìm áo thun dưới 300k”, “Sản phẩm đang sale”, “Giỏ hàng của tôi”, hoặc “Xem đơn hàng”.
             </div>
-        </div>
-
-        <div class="chatbot-quick">
-            <button type="button" data-question="Shop có giao hàng không?">Giao hàng</button>
-            <button type="button" data-question="Thanh toán bằng QR được không?">Thanh toán</button>
-            <button type="button" data-question="Tìm áo thun">Tìm áo thun</button>
         </div>
 
         <form id="chatbotForm" class="chatbot-form">
             <input id="chatbotInput"
                    type="text"
                    autocomplete="off"
-                   placeholder="Nhập câu hỏi..." />
+                   placeholder="Nhập câu hỏi cho MENBOT..." />
 
             <button type="submit">
                 Gửi
@@ -40,38 +49,220 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const STORAGE_KEY = "MENSTYLE_CHATBOT_HISTORY";
+        const OPEN_KEY = "MENSTYLE_CHATBOT_OPEN";
+
         const toggle = document.getElementById("chatbotToggle");
         const panel = document.getElementById("chatbotPanel");
         const closeBtn = document.getElementById("chatbotClose");
+        const clearBtn = document.getElementById("chatbotClear");
         const form = document.getElementById("chatbotForm");
         const input = document.getElementById("chatbotInput");
         const messages = document.getElementById("chatbotMessages");
-        const quickButtons = document.querySelectorAll(".chatbot-quick button");
+        const quickButtons = document.querySelectorAll(".chatbot-suggest-bar button");
+
+        const defaultWelcomeHtml = `
+                <div class="chat-message bot">
+                    Xin chào, mình là MENBOT. Bạn có thể hỏi: “Tìm áo thun dưới 300k”, “Sản phẩm đang sale”, “Giỏ hàng của tôi”, hoặc “Xem đơn hàng”.
+                </div>
+            `;
+
+        function saveChatbotState() {
+            localStorage.setItem(STORAGE_KEY, messages.innerHTML);
+            localStorage.setItem(
+                OPEN_KEY,
+                panel.classList.contains("is-open") ? "true" : "false"
+            );
+        }
+
+        function restoreChatbotState() {
+            const savedMessages = localStorage.getItem(STORAGE_KEY);
+            const wasOpen = localStorage.getItem(OPEN_KEY);
+
+            if (savedMessages && savedMessages.trim().length > 0) {
+                messages.innerHTML = savedMessages;
+            } else {
+                messages.innerHTML = defaultWelcomeHtml;
+            }
+
+            if (wasOpen === "true") {
+                panel.classList.add("is-open");
+            }
+
+            scrollToBottom();
+        }
+
+        function clearChatbotHistory() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(OPEN_KEY);
+
+            messages.innerHTML = defaultWelcomeHtml;
+            panel.classList.add("is-open");
+
+            saveChatbotState();
+            scrollToBottom();
+        }
 
         function openChatbot() {
             panel.classList.add("is-open");
             input.focus();
+            saveChatbotState();
         }
 
         function closeChatbot() {
             panel.classList.remove("is-open");
+            saveChatbotState();
         }
 
         function addMessage(text, type) {
             const div = document.createElement("div");
             div.className = "chat-message " + type;
             div.textContent = text;
+
             messages.appendChild(div);
+
+            scrollToBottom();
+            saveChatbotState();
+
+            return div;
+        }
+
+        function addTypingMessage() {
+            const div = document.createElement("div");
+            div.className = "chat-message bot typing-message";
+            div.innerHTML = "<span></span><span></span><span></span>";
+
+            messages.appendChild(div);
+            scrollToBottom();
+
+            return div;
+        }
+
+        function removeElement(element) {
+            if (element && element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        }
+
+        function addActionButton(text, url) {
+            if (!text || !url) return;
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "chat-action-wrapper";
+
+            const link = document.createElement("a");
+            link.className = "chat-action-btn";
+            link.href = url;
+            link.textContent = text;
+
+            wrapper.appendChild(link);
+            messages.appendChild(wrapper);
+
+            scrollToBottom();
+            saveChatbotState();
+        }
+
+        function addProductCards(products) {
+            if (!products || products.length === 0) return;
+
+            const grid = document.createElement("div");
+            grid.className = "chat-product-list";
+
+            products.forEach(product => {
+                const card = document.createElement("a");
+                card.className = "chat-product-card";
+                card.href = product.url;
+
+                const imageWrap = document.createElement("div");
+                imageWrap.className = "chat-product-image";
+
+                const img = document.createElement("img");
+                img.src = product.imageUrl || "/images/product-tshirt.svg";
+                img.alt = product.name || "Sản phẩm";
+
+                imageWrap.appendChild(img);
+
+                if (product.salePercent && product.salePercent > 0) {
+                    const badge = document.createElement("span");
+                    badge.className = "chat-sale-badge";
+                    badge.textContent = "-" + product.salePercent + "%";
+                    imageWrap.appendChild(badge);
+                }
+
+                const info = document.createElement("div");
+                info.className = "chat-product-info";
+
+                const category = document.createElement("p");
+                category.textContent = product.categoryName || "Sản phẩm";
+
+                const name = document.createElement("h4");
+                name.textContent = product.name || "Sản phẩm";
+
+                const price = document.createElement("div");
+                price.className = "chat-product-price";
+
+                const currentPrice = document.createElement("strong");
+                currentPrice.textContent = product.price || "";
+
+                price.appendChild(currentPrice);
+
+                if (product.oldPrice) {
+                    const oldPrice = document.createElement("span");
+                    oldPrice.textContent = product.oldPrice;
+                    price.appendChild(oldPrice);
+                }
+
+                info.appendChild(category);
+                info.appendChild(name);
+                info.appendChild(price);
+
+                card.appendChild(imageWrap);
+                card.appendChild(info);
+
+                grid.appendChild(card);
+            });
+
+            messages.appendChild(grid);
+
+            scrollToBottom();
+            saveChatbotState();
+        }
+
+        function addQuickReplies(quickReplies) {
+            if (!quickReplies || quickReplies.length === 0) return;
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "chat-quick-replies";
+
+            quickReplies.forEach(item => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = item.text;
+                button.dataset.question = item.question || item.text;
+
+                wrapper.appendChild(button);
+            });
+
+            messages.appendChild(wrapper);
+
+            scrollToBottom();
+            saveChatbotState();
+        }
+
+        function scrollToBottom() {
             messages.scrollTop = messages.scrollHeight;
         }
 
         async function sendMessage(text) {
-            const message = text.trim();
+            const message = (text || "").trim();
 
             if (!message) return;
 
+            openChatbot();
             addMessage(message, "user");
             input.value = "";
+
+            const typing = addTypingMessage();
 
             try {
                 const response = await fetch("/Chat/Ask", {
@@ -80,26 +271,42 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        message: message
+                        message: message,
+                        currentUrl: window.location.pathname + window.location.search
                     })
                 });
 
                 const data = await response.json();
 
+                removeElement(typing);
+
                 addMessage(data.reply || "MENBOT chưa có câu trả lời phù hợp.", "bot");
+                addProductCards(data.products);
+                addActionButton(data.actionText, data.actionUrl);
+                addQuickReplies(data.quickReplies);
+
+                saveChatbotState();
             } catch (error) {
+                removeElement(typing);
                 addMessage("Có lỗi khi kết nối MENBOT. Bạn thử lại sau nhé.", "bot");
+                saveChatbotState();
             }
         }
 
         toggle.addEventListener("click", function () {
             panel.classList.toggle("is-open");
+            saveChatbotState();
+
             if (panel.classList.contains("is-open")) {
                 input.focus();
             }
         });
 
         closeBtn.addEventListener("click", closeChatbot);
+
+        if (clearBtn) {
+            clearBtn.addEventListener("click", clearChatbotHistory);
+        }
 
         form.addEventListener("submit", function (e) {
             e.preventDefault();
@@ -108,9 +315,18 @@
 
         quickButtons.forEach(button => {
             button.addEventListener("click", function () {
-                openChatbot();
                 sendMessage(this.dataset.question || "");
             });
         });
+
+        messages.addEventListener("click", function (e) {
+            const quickReplyButton = e.target.closest(".chat-quick-replies button");
+
+            if (!quickReplyButton) return;
+
+            sendMessage(quickReplyButton.dataset.question || quickReplyButton.textContent);
+        });
+
+        restoreChatbotState();
     });
 </script>

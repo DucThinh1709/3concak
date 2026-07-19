@@ -20,6 +20,25 @@
             .Where(x => x.UserId == currentUser.Id)
             .SumAsync(x => (int?)x.Quantity) ?? 0;
     }
+    ApplicationUser? layoutUser = null;
+    string layoutDisplayName = "";
+    string layoutAvatarUrl = "";
+    string layoutAvatarInitial = "U";
+
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        layoutUser = await UserManager.GetUserAsync(User);
+
+        layoutDisplayName = !string.IsNullOrWhiteSpace(layoutUser?.FullName)
+            ? layoutUser.FullName
+            : User.Identity.Name ?? "Tài khoản";
+
+        layoutAvatarUrl = layoutUser?.AvatarUrl ?? "";
+
+        layoutAvatarInitial = !string.IsNullOrWhiteSpace(layoutDisplayName)
+            ? layoutDisplayName.Trim()[0].ToString().ToUpper()
+            : "U";
+    }
 }
 
 <!DOCTYPE html>
@@ -189,11 +208,36 @@
 
                 @if (currentUser is not null)
                 {
-                    <a class="nav-pill account-pill"
-                       asp-controller="Account"
-                       asp-action="Profile">
-                        Xin chào, @currentUser.FullName
-                    </a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="nav-profile-link"
+                           asp-controller="Account"
+                           asp-action="Profile">
+
+                            <span class="nav-avatar">
+                                @if (!string.IsNullOrWhiteSpace(layoutAvatarUrl))
+                                {
+                                    <img src="@layoutAvatarUrl" alt="Ảnh đại diện" />
+                                }
+                                else
+                                {
+                                    <span>@layoutAvatarInitial</span>
+                                }
+                            </span>
+
+                            <span class="nav-profile-text">
+                                Xin chào, @layoutDisplayName
+                            </span>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="nav-login-link"
+                           asp-controller="Account"
+                           asp-action="Login">
+                            Đăng nhập
+                        </a>
+                    }
 
                     <a class="nav-pill"
                        asp-controller="Account"
