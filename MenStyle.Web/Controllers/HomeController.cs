@@ -54,8 +54,8 @@ public class HomeController : Controller
 
         var randomProducts = activeProducts
             .OrderBy(_ => Guid.NewGuid())
-
             .ToList();
+
         var viewModel = new HomeViewModel
         {
             Categories = [],
@@ -99,7 +99,11 @@ public class HomeController : Controller
         return View(viewModel);
     }
 
-    public async Task<IActionResult> SanPham(string? category = "all", string? sort = "default", string? keyword = null)
+    public async Task<IActionResult> SanPham(
+        string? category = "all",
+        string? sort = "default",
+        string? keyword = null,
+        bool saleOnly = false)
     {
         var selectedCategory = string.IsNullOrWhiteSpace(category) ? "all" : category;
         var sortOrder = string.IsNullOrWhiteSpace(sort) ? "default" : sort;
@@ -115,12 +119,18 @@ public class HomeController : Controller
         }
 
         var query = _context.Products
+            .AsNoTracking()
             .Where(p => p.IsActive)
             .AsQueryable();
 
         if (selectedCategory != "all")
         {
             query = query.Where(p => p.CategorySlug == selectedCategory);
+        }
+
+        if (saleOnly)
+        {
+            query = query.Where(p => p.OldPrice > p.Price && p.OldPrice > 0);
         }
 
         if (!string.IsNullOrWhiteSpace(searchKeyword))
@@ -131,14 +141,30 @@ public class HomeController : Controller
                 p.CategorySlug.Contains(searchKeyword));
         }
 
-        query = sortOrder switch
-        {
-            "price-asc" => query.OrderBy(p => p.Price),
-            "price-desc" => query.OrderByDescending(p => p.Price),
-            _ => query.OrderByDescending(p => p.Id)
-        };
-
         var products = await query.ToListAsync();
+
+        products = sortOrder switch
+        {
+            "price-asc" => products
+                .OrderBy(p => p.Price)
+                .ToList(),
+
+            "price-desc" => products
+                .OrderByDescending(p => p.Price)
+                .ToList(),
+
+            "discount-asc" => products
+                .OrderBy(p => GetDiscountPercent(p.OldPrice, p.Price))
+                .ToList(),
+
+            "discount-desc" => products
+                .OrderByDescending(p => GetDiscountPercent(p.OldPrice, p.Price))
+                .ToList(),
+
+            _ => products
+                .OrderByDescending(p => p.Id)
+                .ToList()
+        };
 
         var viewModel = new ProductListViewModel
         {
@@ -146,7 +172,8 @@ public class HomeController : Controller
             Products = products,
             SelectedCategory = selectedCategory,
             SortOrder = sortOrder,
-            Keyword = searchKeyword
+            Keyword = searchKeyword ?? "",
+            SaleOnly = saleOnly
         };
 
         return View(viewModel);
@@ -191,66 +218,6 @@ public class HomeController : Controller
         return View(viewModel);
     }
 
-    private static List<string> SplitOptions(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return [];
-        }
-
-        return value
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-    }
-
-    private static List<string> GenerateRandomColors(int productId)
-    {
-        var colorPool = new List<string>
-    {
-        "Đen",
-        "Trắng",
-        "Xám",
-        "Nâu",
-        "Be",
-        "Xanh dương",
-        "Đỏ",
-        "Kem"
-    };
-
-        var random = new Random(productId);
-
-        return colorPool
-            .OrderBy(_ => random.Next())
-            .Take(4)
-            .ToList();
-    }
-
-    private static Dictionary<string, string> ParseColorImageMap(string? value)
-    {
-        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return result;
-        }
-
-        var pairs = value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        foreach (var pair in pairs)
-        {
-            var parts = pair.Split('=', 2, StringSplitOptions.TrimEntries);
-
-            if (parts.Length == 2
-                && !string.IsNullOrWhiteSpace(parts[0])
-                && !string.IsNullOrWhiteSpace(parts[1]))
-            {
-                result[parts[0]] = parts[1];
-            }
-        }
-
-        return result;
-    }
-
     public async Task<IActionResult> BoSuuTap()
     {
         var categories = await _context.Categories
@@ -287,6 +254,78 @@ public class HomeController : Controller
     public IActionResult Privacy()
     {
         return View();
+    }
+
+    private static List<string> SplitOptions(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private static List<string> GenerateRandomColors(int productId)
+    {
+        var colorPool = new List<string>
+        {
+            "Đen",
+            "Trắng",
+            "Xám",
+            "Nâu",
+            "Be",
+            "Xanh navy",
+            "Xanh rêu",
+            "Xanh dương",
+            "Đỏ đô",
+            "Kem"
+        };
+
+        var random = new Random(productId);
+
+        return colorPool
+            .OrderBy(_ => random.Next())
+            .Take(4)
+            .ToList();
+    }
+
+    private static Dictionary<string, string> ParseColorImageMap(string? value)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return result;
+        }
+
+        var pairs = value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var pair in pairs)
+        {
+            var parts = pair.Split('=', 2, StringSplitOptions.TrimEntries);
+
+            if (parts.Length == 2
+                && !string.IsNullOrWhiteSpace(parts[0])
+                && !string.IsNullOrWhiteSpace(parts[1]))
+            {
+                result[parts[0]] = parts[1];
+            }
+        }
+
+        return result;
+    }
+
+    private static int GetDiscountPercent(decimal oldPrice, decimal price)
+    {
+        if (oldPrice <= 0 || oldPrice <= price)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((double)((oldPrice - price) / oldPrice * 100));
     }
 
     private static string GetStatusCssClass(string status)

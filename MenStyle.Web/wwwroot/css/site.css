@@ -5314,3 +5314,105 @@ header,
         display: none;
     }
 }
+.product-img-sale {
+    position: relative;
+    overflow: hidden;
+}
+
+.sale-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 5;
+    min-width: 72px;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: #d62828;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 28px rgba(214, 40, 40, 0.28);
+}
+
+.detail-sale-badge {
+    top: 20px;
+    left: 20px;
+}
+
+.product-tag-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.sale-mini-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff0f0;
+    color: #d62828;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.sale-price-row strong {
+    color: #d62828;
+}
+
+.sale-save-text {
+    margin: 8px 0 0;
+    color: #c89542;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.detail-sale-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 14px 0 18px;
+}
+
+    .detail-sale-info span,
+    .detail-sale-info strong {
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .detail-sale-info span {
+        background: #d62828;
+        color: #ffffff;
+    }
+
+    .detail-sale-info strong {
+        background: #fff3dd;
+        color: #b27700;
+    }
+.mega-sale-link {
+    color: #d62828 !important;
+    font-weight: 900 !important;
+}
+
+    .mega-sale-link::after {
+        content: " SALE";
+        margin-left: 6px;
+        color: #ffffff;
+        background: #d62828;
+        font-size: 11px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        vertical-align: middle;
+    }

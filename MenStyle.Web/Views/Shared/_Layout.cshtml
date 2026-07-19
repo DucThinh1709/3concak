@@ -131,7 +131,6 @@
                             </div>
 
                             <div class="mega-column mega-highlight">
-                                <span>New</span>
                                 <h3>HÀNG MỚI</h3>
 
                                 <a asp-controller="Home" asp-action="SanPham" asp-route-sort="default">
@@ -145,6 +144,14 @@
                                 <a asp-controller="Home" asp-action="SanPham" asp-route-keyword="oversize">
                                     Oversize
                                 </a>
+
+                                <a class="mega-sale-link"
+                                   asp-controller="Home"
+                                   asp-action="SanPham"
+                                   asp-route-saleOnly="true">
+                                    Đang sale
+                                </a>
+
                             </div>
 
                             <div class="mega-column">

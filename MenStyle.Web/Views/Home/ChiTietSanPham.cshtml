@@ -1,5 +1,4 @@
-﻿@using System.Text.Json
-@model MenStyle.Web.ViewModels.ProductDetailViewModel
+﻿@model MenStyle.Web.ViewModels.ProductDetailViewModel
 
 @{
     ViewData["Title"] = Model.Product.Name;
@@ -9,8 +8,20 @@
         return $"{price:N0}đ".Replace(",", ".");
     }
 
+    int GetSalePercent(decimal oldPrice, decimal price)
+    {
+        if (oldPrice <= 0 || oldPrice <= price)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((double)((oldPrice - price) / oldPrice * 100));
+    }
+
     var defaultSize = Model.Sizes.FirstOrDefault() ?? "";
     var defaultColor = Model.Colors.FirstOrDefault() ?? "";
+
+    var salePercent = GetSalePercent(Model.Product.OldPrice, Model.Product.Price);
 }
 
 <main class="product-detail-page">
@@ -19,7 +30,15 @@
         <div class="container product-detail-layout">
 
             <div class="product-detail-gallery">
-                <div class="product-detail-image">
+                <div class="product-detail-image product-img-sale">
+
+                    @if (salePercent > 0)
+                    {
+                        <span class="sale-badge detail-sale-badge">
+                            -@salePercent%
+                        </span>
+                    }
+
                     <img id="mainProductImage"
                          src="@Model.Product.ImageUrl"
                          alt="@Model.Product.AltText" />
@@ -28,9 +47,9 @@
                 <div class="product-detail-badges">
                     <span>@Model.Product.CategoryName</span>
 
-                    @if (Model.Product.OldPrice > Model.Product.Price)
+                    @if (salePercent > 0)
                     {
-                        <span>Đang giảm giá</span>
+                        <span>Đang sale -@salePercent%</span>
                     }
 
                     @if (Model.Product.StockQuantity > 0)
@@ -52,11 +71,19 @@
                 <div class="detail-price-row">
                     <strong>@FormatPrice(Model.Product.Price)</strong>
 
-                    @if (Model.Product.OldPrice > Model.Product.Price)
+                    @if (salePercent > 0)
                     {
                         <del>@FormatPrice(Model.Product.OldPrice)</del>
                     }
                 </div>
+
+                @if (salePercent > 0)
+                {
+                    <div class="detail-sale-info">
+                        <span>Đang sale -@salePercent%</span>
+                        <strong>Tiết kiệm @FormatPrice(Model.Product.OldPrice - Model.Product.Price)</strong>
+                    </div>
+                }
 
                 <p class="detail-description">
                     @Model.Product.Description
@@ -195,16 +222,35 @@
                 <div class="product-grid">
                     @foreach (var product in Model.RelatedProducts)
                     {
+                        var relatedSalePercent = GetSalePercent(product.OldPrice, product.Price);
+
                         <article class="product-card">
-                            <a class="product-img"
+                            <a class="product-img product-img-sale"
                                asp-controller="Home"
                                asp-action="ChiTietSanPham"
                                asp-route-id="@product.Id">
+
+                                @if (relatedSalePercent > 0)
+                                {
+                                    <span class="sale-badge">
+                                        -@relatedSalePercent%
+                                    </span>
+                                }
+
                                 <img src="@product.ImageUrl" alt="@product.AltText" />
                             </a>
 
                             <div class="product-info">
-                                <p class="tag">@product.CategoryName</p>
+                                <div class="product-tag-row">
+                                    <p class="tag">@product.CategoryName</p>
+
+                                    @if (relatedSalePercent > 0)
+                                    {
+                                        <span class="sale-mini-tag">
+                                            Đang sale
+                                        </span>
+                                    }
+                                </div>
 
                                 <h3>
                                     <a asp-controller="Home"
@@ -214,14 +260,21 @@
                                     </a>
                                 </h3>
 
-                                <div class="price-row">
+                                <div class="price-row @(relatedSalePercent > 0 ? "sale-price-row" : "")">
                                     <strong>@FormatPrice(product.Price)</strong>
 
-                                    @if (product.OldPrice > product.Price)
+                                    @if (relatedSalePercent > 0)
                                     {
                                         <span>@FormatPrice(product.OldPrice)</span>
                                     }
                                 </div>
+
+                                @if (relatedSalePercent > 0)
+                                {
+                                    <p class="sale-save-text">
+                                        Tiết kiệm @FormatPrice(product.OldPrice - product.Price)
+                                    </p>
+                                }
                             </div>
                         </article>
                     }
@@ -231,6 +284,7 @@
     </section>
 
 </main>
+
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {

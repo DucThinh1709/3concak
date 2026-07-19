@@ -11,4 +11,5 @@ public class ProductListViewModel
     public string SortOrder { get; set; } = "default";
 
     public string? Keyword { get; set; }
+    public bool SaleOnly { get; set; }
 }
