@@ -125,7 +125,12 @@ public class HomeController : Controller
 
         if (selectedCategory != "all")
         {
-            query = query.Where(p => p.CategorySlug == selectedCategory);
+            query = query.Where(p =>
+                p.CategorySlug == selectedCategory ||
+                p.ProductTags == selectedCategory ||
+                p.ProductTags.StartsWith(selectedCategory + ",") ||
+                p.ProductTags.EndsWith("," + selectedCategory) ||
+                p.ProductTags.Contains("," + selectedCategory + ","));
         }
 
         if (saleOnly)
@@ -271,24 +276,28 @@ public class HomeController : Controller
     private static List<string> GenerateRandomColors(int productId)
     {
         var colorPool = new List<string>
-        {
-            "Đen",
-            "Trắng",
-            "Xám",
-            "Nâu",
-            "Be",
-            "Xanh navy",
-            "Xanh rêu",
-            "Xanh dương",
-            "Đỏ đô",
-            "Kem"
-        };
+    {
+        "Đen",
+        "Trắng",
+        "Xám",
+        "Nâu",
+        "Be",
+        "Xanh navy",
+        "Xanh rêu",
+        "Xanh dương",
+        "Đỏ đô",
+        "Kem"
+    };
 
         var random = new Random(productId);
 
+        var colorCount = random.Next(1, 4);
+        // random từ 1 đến 3 màu
+        // Next(1, 4) nghĩa là lấy 1, 2 hoặc 3
+
         return colorPool
             .OrderBy(_ => random.Next())
-            .Take(4)
+            .Take(colorCount)
             .ToList();
     }
 

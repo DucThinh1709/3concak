@@ -173,16 +173,22 @@ public class CartController : Controller
         "Xám",
         "Nâu",
         "Be",
+        "Xanh navy",
+        "Xanh rêu",
         "Xanh dương",
-        "Đỏ",
+        "Đỏ đô",
         "Kem"
     };
 
         var random = new Random(productId);
 
+        var colorCount = random.Next(1, 4);
+        // random từ 1 đến 3 màu
+        // Next(1, 4) nghĩa là lấy 1, 2 hoặc 3
+
         return colorPool
             .OrderBy(_ => random.Next())
-            .Take(4)
+            .Take(colorCount)
             .ToList();
     }
 

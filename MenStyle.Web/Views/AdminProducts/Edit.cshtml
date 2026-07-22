@@ -1,5 +1,5 @@
 ﻿@model MenStyle.Web.Models.Product
-
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Sửa sản phẩm";
 }
@@ -29,24 +29,18 @@
 
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="CreatedAt" />
+            <input asp-for="CategoryName" type="hidden" id="categoryNameInput" />
 
             <div asp-validation-summary="ModelOnly" class="text-danger validation-box"></div>
 
             <div class="edit-preview-card">
                 <p>Ảnh hiện tại</p>
-                <img src="@Model.ImageUrl" alt="@Model.AltText" />
-                <span>@Model.ImageUrl</span>
-            </div>
 
-            <div class="form-group">
-                <label asp-for="ColorImageMap">Ảnh theo màu</label>
-                <textarea asp-for="ColorImageMap"
-                          class="form-control textarea-control"
-                          placeholder="Đen=/images/ao-den.jpg;Trắng=/images/ao-trang.jpg;Nâu=/images/ao-nau.jpg"></textarea>
-                <span asp-validation-for="ColorImageMap" class="text-danger"></span>
-                <small>
-                    Nhập theo dạng: Màu=đường dẫn ảnh; Màu=đường dẫn ảnh
-                </small>
+                <img src="@Model.ImageUrl" alt="@Model.AltText" />
+
+                <span title="@Model.ImageUrl">
+                    @Model.ImageUrl
+                </span>
             </div>
 
             <div class="form-row">
@@ -57,44 +51,143 @@
                 </div>
 
                 <div class="form-group">
-                    <label asp-for="CategoryName">Tên danh mục</label>
-                    <input asp-for="CategoryName" class="form-control" />
-                    <span asp-validation-for="CategoryName" class="text-danger"></span>
+                    <label asp-for="CategorySlug">Danh mục sản phẩm</label>
+
+                    <select asp-for="CategorySlug"
+                            asp-items="ViewBag.Categories"
+                            class="form-control"
+                            id="categorySelect">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+
+                    <span asp-validation-for="CategorySlug" class="text-danger"></span>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label asp-for="CategorySlug">Mã danh mục</label>
-                    <input asp-for="CategorySlug" class="form-control" />
-                    <span asp-validation-for="CategorySlug" class="text-danger"></span>
+                    <label>Tên danh mục</label>
+                    <input type="text"
+                           id="categoryNamePreview"
+                           class="form-control"
+                           readonly />
                 </div>
 
+                <div class="form-group">
+                    <label>Mã danh mục</label>
+                    <input type="text"
+                           id="categorySlugPreview"
+                           class="form-control"
+                           readonly />
+                </div>
+            </div>
+
+            <div class="form-group product-tag-box">
+                <label asp-for="ProductTags">Tag phụ của sản phẩm</label>
+
+                <input asp-for="ProductTags"
+                       type="hidden"
+                       id="ProductTags" />
+
+                <div class="product-tag-list" id="productTagList">
+                    @foreach (var tag in ViewBag.ProductTags as List<SelectListItem> ?? new List<SelectListItem>())
+                    {
+                        <button type="button"
+                                class="product-tag-chip"
+                                data-tag="@tag.Value">
+                            @tag.Text
+                        </button>
+                    }
+                </div>
+
+                <div class="selected-tag-preview">
+                    Đang chọn:
+                    <strong id="selectedTagText">Chưa chọn tag</strong>
+                </div>
+
+                <small>
+                    Danh mục chính đã chọn ở phía trên. Ở đây chỉ chọn các tag phụ như Basic dễ phối, Oversize, Hàng bán chạy.
+                </small>
+
+                <span asp-validation-for="ProductTags" class="text-danger"></span>
+            </div>
+
+            <div class="form-group color-picker-box">
+                <label asp-for="AvailableColors">Màu sắc sản phẩm</label>
+
+                <input asp-for="AvailableColors"
+                       type="hidden"
+                       id="AvailableColors" />
+
+                <div class="color-chip-list" id="colorChipList">
+                    <button type="button" class="admin-color-chip" data-color="Đen">Đen</button>
+                    <button type="button" class="admin-color-chip" data-color="Trắng">Trắng</button>
+                    <button type="button" class="admin-color-chip" data-color="Xám">Xám</button>
+                    <button type="button" class="admin-color-chip" data-color="Nâu">Nâu</button>
+                    <button type="button" class="admin-color-chip" data-color="Be">Be</button>
+                    <button type="button" class="admin-color-chip" data-color="Xanh navy">Xanh navy</button>
+                    <button type="button" class="admin-color-chip" data-color="Xanh rêu">Xanh rêu</button>
+                    <button type="button" class="admin-color-chip" data-color="Xanh dương">Xanh dương</button>
+                    <button type="button" class="admin-color-chip" data-color="Đỏ đô">Đỏ đô</button>
+                    <button type="button" class="admin-color-chip" data-color="Kem">Kem</button>
+                </div>
+
+                <div class="selected-color-preview">
+                    Đang chọn:
+                    <strong id="selectedColorText">Chưa chọn màu</strong>
+                </div>
+
+                <div class="color-helper-row">
+                    <small>
+                        Đây là danh sách màu sẽ hiện ở trang chi tiết sản phẩm.
+                    </small>
+
+                    <button type="button" class="random-color-btn" id="randomColorBtn">
+                        Random lại màu
+                    </button>
+                </div>
+
+                <span asp-validation-for="AvailableColors" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ColorImageMap">Ảnh theo màu</label>
+                <textarea asp-for="ColorImageMap"
+                          class="form-control textarea-control"
+                          wrap="soft"
+                          placeholder="Đen=/images/ao-den.jpg;Trắng=/images/ao-trang.jpg;Nâu=/images/ao-nau.jpg"></textarea>
+                <span asp-validation-for="ColorImageMap" class="text-danger"></span>
+                <small>
+                    Nhập theo dạng: Màu=đường dẫn ảnh; Màu=đường dẫn ảnh
+                </small>
+            </div>
+
+            <div class="form-row">
                 <div class="form-group">
                     <label asp-for="Price">Giá bán</label>
                     <input asp-for="Price" class="form-control" type="number" min="0" step="1000" />
                     <span asp-validation-for="Price" class="text-danger"></span>
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group">
                     <label asp-for="OldPrice">Giá cũ</label>
                     <input asp-for="OldPrice" class="form-control" type="number" min="0" step="1000" />
                     <span asp-validation-for="OldPrice" class="text-danger"></span>
                 </div>
+            </div>
 
+            <div class="form-row">
                 <div class="form-group">
                     <label asp-for="ImageUrl">Đường dẫn ảnh</label>
                     <input asp-for="ImageUrl" class="form-control" />
                     <span asp-validation-for="ImageUrl" class="text-danger"></span>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label asp-for="AltText">Mô tả ảnh</label>
-                <input asp-for="AltText" class="form-control" />
-                <span asp-validation-for="AltText" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="AltText">Mô tả ảnh</label>
+                    <input asp-for="AltText" class="form-control" />
+                    <span asp-validation-for="AltText" class="text-danger"></span>
+                </div>
             </div>
 
             <div class="form-group">
@@ -114,4 +207,246 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setupCategorySync();
+            setupProductTags();
+            setupAdminColorPicker();
+        });
+
+        function setupCategorySync() {
+            const categorySelect = document.getElementById("categorySelect");
+            const categoryNameInput = document.getElementById("categoryNameInput");
+            const categoryNamePreview = document.getElementById("categoryNamePreview");
+            const categorySlugPreview = document.getElementById("categorySlugPreview");
+
+            if (!categorySelect) return;
+
+            function syncCategory() {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+
+                const categoryName = selectedOption && selectedOption.value
+                    ? selectedOption.text.trim()
+                    : "";
+
+                const categorySlug = selectedOption && selectedOption.value
+                    ? selectedOption.value.trim()
+                    : "";
+
+                if (categoryNameInput) {
+                    categoryNameInput.value = categoryName;
+                }
+
+                if (categoryNamePreview) {
+                    categoryNamePreview.value = categoryName;
+                }
+
+                if (categorySlugPreview) {
+                    categorySlugPreview.value = categorySlug;
+                }
+
+                refreshProductTagsByCategory();
+            }
+
+            syncCategory();
+
+            categorySelect.addEventListener("change", syncCategory);
+        }
+
+        function setupProductTags() {
+            const productTagsInput = document.getElementById("ProductTags");
+            const productTagList = document.getElementById("productTagList");
+
+            if (!productTagsInput || !productTagList) {
+                return;
+            }
+
+            productTagList.addEventListener("click", function (event) {
+                const chip = event.target.closest(".product-tag-chip");
+
+                if (!chip) return;
+
+                const tag = chip.dataset.tag;
+                const mainCategorySlug = getMainCategorySlug();
+
+                if (tag === mainCategorySlug) {
+                    return;
+                }
+
+                let selectedTags = getSelectedTags();
+
+                if (selectedTags.includes(tag)) {
+                    selectedTags = selectedTags.filter(x => x !== tag);
+                } else {
+                    selectedTags.push(tag);
+                }
+
+                setSelectedTags(selectedTags);
+            });
+
+            setSelectedTags(getSelectedTags());
+            refreshProductTagsByCategory();
+        }
+
+        function getMainCategorySlug() {
+            const categorySelect = document.getElementById("categorySelect");
+
+            return categorySelect ? categorySelect.value.trim() : "";
+        }
+
+        function getSelectedTags() {
+            const productTagsInput = document.getElementById("ProductTags");
+
+            if (!productTagsInput || !productTagsInput.value) {
+                return [];
+            }
+
+            return productTagsInput.value
+                .split(",")
+                .map(x => x.trim())
+                .filter(x => x.length > 0);
+        }
+
+        function getTagDisplayName(tagSlug) {
+            const chip = document.querySelector(`.product-tag-chip[data-tag="${tagSlug}"]`);
+
+            return chip ? chip.textContent.trim() : tagSlug;
+        }
+
+        function setSelectedTags(tags) {
+            const productTagsInput = document.getElementById("ProductTags");
+            const selectedTagText = document.getElementById("selectedTagText");
+            const mainCategorySlug = getMainCategorySlug();
+
+            if (!productTagsInput) return;
+
+            const uniqueTags = [...new Set(tags)]
+                .filter(tag => tag !== mainCategorySlug);
+
+            productTagsInput.value = uniqueTags.join(",");
+
+            document.querySelectorAll(".product-tag-chip").forEach(chip => {
+                const tag = chip.dataset.tag;
+
+                if (tag === mainCategorySlug) {
+                    chip.classList.remove("is-selected");
+                    chip.style.display = "none";
+                    return;
+                }
+
+                chip.style.display = "inline-flex";
+
+                if (uniqueTags.includes(tag)) {
+                    chip.classList.add("is-selected");
+                } else {
+                    chip.classList.remove("is-selected");
+                }
+            });
+
+            if (selectedTagText) {
+                selectedTagText.textContent = uniqueTags.length > 0
+                    ? uniqueTags.map(getTagDisplayName).join(", ")
+                    : "Chưa chọn tag";
+            }
+        }
+
+        function refreshProductTagsByCategory() {
+            setSelectedTags(getSelectedTags());
+        }
+
+        function setupAdminColorPicker() {
+            const availableColorsInput = document.getElementById("AvailableColors");
+            const selectedColorText = document.getElementById("selectedColorText");
+            const randomColorBtn = document.getElementById("randomColorBtn");
+            const colorChipList = document.getElementById("colorChipList");
+
+            if (!availableColorsInput || !colorChipList) {
+                return;
+            }
+
+            const colorPool = [
+                "Đen",
+                "Trắng",
+                "Xám",
+                "Nâu",
+                "Be",
+                "Xanh navy",
+                "Xanh rêu",
+                "Xanh dương",
+                "Đỏ đô",
+                "Kem"
+            ];
+
+            function getSelectedColors() {
+                return availableColorsInput.value
+                    .split(",")
+                    .map(x => x.trim())
+                    .filter(x => x.length > 0);
+            }
+
+            function setSelectedColors(colors) {
+                const uniqueColors = [...new Set(colors)];
+
+                availableColorsInput.value = uniqueColors.join(",");
+
+                document.querySelectorAll(".admin-color-chip").forEach(chip => {
+                    const color = chip.dataset.color;
+
+                    if (uniqueColors.includes(color)) {
+                        chip.classList.add("is-selected");
+                    } else {
+                        chip.classList.remove("is-selected");
+                    }
+                });
+
+                if (selectedColorText) {
+                    selectedColorText.textContent = uniqueColors.length > 0
+                        ? uniqueColors.join(", ")
+                        : "Chưa chọn màu";
+                }
+            }
+
+            function randomColors() {
+                const shuffled = [...colorPool].sort(() => Math.random() - 0.5);
+                const count = Math.floor(Math.random() * 3) + 1;
+
+                setSelectedColors(shuffled.slice(0, count));
+            }
+
+            colorChipList.addEventListener("click", function (event) {
+                const chip = event.target.closest(".admin-color-chip");
+
+                if (!chip) return;
+
+                const color = chip.dataset.color;
+                let selectedColors = getSelectedColors();
+
+                if (selectedColors.includes(color)) {
+                    selectedColors = selectedColors.filter(x => x !== color);
+                } else {
+                    selectedColors.push(color);
+                }
+
+                if (selectedColors.length === 0) {
+                    alert("Sản phẩm cần ít nhất 1 màu.");
+                    return;
+                }
+
+                setSelectedColors(selectedColors);
+            });
+
+            if (randomColorBtn) {
+                randomColorBtn.addEventListener("click", randomColors);
+            }
+
+            const currentColors = getSelectedColors();
+
+            if (currentColors.length > 0) {
+                setSelectedColors(currentColors);
+            } else {
+                randomColors();
+            }
+        }
+    </script>
 }
