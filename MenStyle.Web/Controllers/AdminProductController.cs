@@ -36,6 +36,7 @@ public class AdminProductsController : Controller
 
         await LoadCategorySelectListAsync(defaultCategory?.Filter);
         await LoadProductTagSelectListAsync();
+
         return View(new Product
         {
             CategorySlug = defaultCategory?.Filter ?? "",
@@ -44,6 +45,7 @@ public class AdminProductsController : Controller
             Price = 0,
             OldPrice = 0,
             AvailableColors = string.Join(",", GenerateRandomColors(Environment.TickCount)),
+            ProductTags = "",
             IsActive = true,
             CreatedAt = DateTime.Now
         });
@@ -68,7 +70,7 @@ public class AdminProductsController : Controller
         }
 
         ModelState.Remove(nameof(Product.ProductTags));
-        model.ProductTags = model.ProductTags?.Trim() ?? "";
+        model.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
 
         if (!ModelState.IsValid)
         {
@@ -78,12 +80,12 @@ public class AdminProductsController : Controller
         }
 
         model.Name = model.Name.Trim();
-        model.ImageUrl = model.ImageUrl.Trim();
+        model.ImageUrl = model.ImageUrl?.Trim() ?? "";
         model.AltText = model.AltText?.Trim() ?? "";
         model.ColorImageMap = model.ColorImageMap?.Trim() ?? "";
-        model.CreatedAt = DateTime.Now;
         model.AvailableColors = model.AvailableColors?.Trim() ?? "";
-        model.ProductTags = model.ProductTags?.Trim() ?? "";
+        model.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
+        model.CreatedAt = DateTime.Now;
 
         _context.Products.Add(model);
         await _context.SaveChangesAsync();
@@ -106,6 +108,8 @@ public class AdminProductsController : Controller
         {
             product.AvailableColors = string.Join(",", GenerateRandomColors(product.Id));
         }
+
+        product.ProductTags = NormalizeProductTags(product.ProductTags, product.CategorySlug);
 
         await LoadCategorySelectListAsync(product.CategorySlug);
         await LoadProductTagSelectListAsync();
@@ -137,7 +141,7 @@ public class AdminProductsController : Controller
         }
 
         ModelState.Remove(nameof(Product.ProductTags));
-        model.ProductTags = model.ProductTags?.Trim() ?? "";
+        model.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
 
         if (!ModelState.IsValid)
         {
@@ -158,12 +162,12 @@ public class AdminProductsController : Controller
         product.CategoryName = model.CategoryName;
         product.Price = model.Price;
         product.OldPrice = model.OldPrice;
-        product.ImageUrl = model.ImageUrl.Trim();
+        product.ImageUrl = model.ImageUrl?.Trim() ?? "";
         product.AltText = model.AltText?.Trim() ?? "";
         product.ColorImageMap = model.ColorImageMap?.Trim() ?? "";
-        product.IsActive = model.IsActive;
         product.AvailableColors = model.AvailableColors?.Trim() ?? "";
-        product.ProductTags = model.ProductTags?.Trim() ?? "";
+        product.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
+        product.IsActive = model.IsActive;
 
         await _context.SaveChangesAsync();
 
@@ -219,42 +223,6 @@ public class AdminProductsController : Controller
         ViewBag.Categories = categories;
     }
 
-    private async Task<Category?> GetSelectedCategoryAsync(string? categorySlug)
-    {
-        if (string.IsNullOrWhiteSpace(categorySlug))
-        {
-            return null;
-        }
-
-        var slug = categorySlug.Trim();
-
-        return await _context.Categories
-            .FirstOrDefaultAsync(c => c.Filter == slug && c.Filter != "all");
-    }
-    private static List<string> GenerateRandomColors(int seed)
-    {
-        var colorPool = new List<string>
-    {
-        "Đen",
-        "Trắng",
-        "Xám",
-        "Nâu",
-        "Be",
-        "Xanh navy",
-        "Xanh rêu",
-        "Xanh dương",
-        "Đỏ đô",
-        "Kem"
-    };
-
-        var random = new Random(seed);
-        var colorCount = random.Next(1, 4);
-
-        return colorPool
-            .OrderBy(_ => random.Next())
-            .Take(colorCount)
-            .ToList();
-    }
     private async Task LoadProductTagSelectListAsync()
     {
         var tags = await _context.Categories
@@ -268,5 +236,58 @@ public class AdminProductsController : Controller
             .ToListAsync();
 
         ViewBag.ProductTags = tags;
+    }
+
+    private async Task<Category?> GetSelectedCategoryAsync(string? categorySlug)
+    {
+        if (string.IsNullOrWhiteSpace(categorySlug))
+        {
+            return null;
+        }
+
+        var slug = categorySlug.Trim();
+
+        return await _context.Categories
+            .FirstOrDefaultAsync(c => c.Filter == slug && c.Filter != "all");
+    }
+
+    private static string NormalizeProductTags(string? value, string? mainCategorySlug)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var mainSlug = mainCategorySlug?.Trim() ?? "";
+
+        return string.Join(",",
+            value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                 .Where(tag => tag != mainSlug)
+                 .Distinct());
+    }
+
+    private static List<string> GenerateRandomColors(int seed)
+    {
+        var colorPool = new List<string>
+        {
+            "Đen",
+            "Trắng",
+            "Xám",
+            "Nâu",
+            "Be",
+            "Xanh navy",
+            "Xanh rêu",
+            "Xanh dương",
+            "Đỏ đô",
+            "Kem"
+        };
+
+        var random = new Random(seed);
+        var colorCount = random.Next(1, 4);
+
+        return colorPool
+            .OrderBy(_ => random.Next())
+            .Take(colorCount)
+            .ToList();
     }
 }
