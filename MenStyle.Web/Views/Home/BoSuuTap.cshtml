@@ -7,23 +7,50 @@
     {
         return $"{price:N0}đ".Replace(",", ".");
     }
+
+    int GetSalePercent(decimal oldPrice, decimal price)
+    {
+        if (oldPrice <= 0 || oldPrice <= price)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((double)((oldPrice - price) / oldPrice * 100));
+    }
 }
 
-<main class="collection-page">
+<main class="collection-v2-page">
 
-    <section class="collection-hero">
-        <div class="container collection-hero-inner">
-            <div>
-                <p class="eyebrow">MENSTYLE COLLECTION 2026</p>
-                <h1>Bộ sưu tập thời trang nam</h1>
+    <section class="collection-v2-hero">
+        <div class="container collection-v2-hero-inner">
+            <div class="collection-v2-hero-content">
+                <p class="eyebrow">MENSTYLE LOOKBOOK 2026</p>
+
+                <h1>Bộ sưu tập thời trang nam hiện đại</h1>
+
                 <p>
-                    Khám phá các nhóm sản phẩm nổi bật theo phong cách: basic, lịch lãm,
-                    năng động và hiện đại dành cho nam giới.
+                    Khám phá các outfit được phân nhóm theo phong cách: basic dễ phối,
+                    oversize năng động, áo nam, quần nam và những sản phẩm đang sale.
                 </p>
 
-                <div class="collection-stats">
+                <div class="collection-v2-actions">
+                    <a class="btn btn-primary"
+                       asp-controller="Home"
+                       asp-action="SanPham">
+                        Mua sắm ngay
+                    </a>
+
+                    <a class="btn btn-outline"
+                       asp-controller="Home"
+                       asp-action="SanPham"
+                       asp-route-saleOnly="true">
+                        Xem hàng sale
+                    </a>
+                </div>
+
+                <div class="collection-v2-stats">
                     <div>
-                        <strong>@Model.Collections.Count</strong>
+                        <strong>@Model.TotalCollections</strong>
                         <span>Bộ sưu tập</span>
                     </div>
 
@@ -33,75 +60,145 @@
                     </div>
 
                     <div>
-                        <strong>2026</strong>
-                        <span>New season</span>
+                        <strong>@Model.SaleProductsCount</strong>
+                        <span>Đang sale</span>
                     </div>
                 </div>
             </div>
 
-            <div class="collection-hero-card">
-                <span>New Collection</span>
-                <strong>Modern Men</strong>
-                <p>Đơn giản, nam tính và dễ phối đồ.</p>
+            <div class="collection-v2-hero-showcase">
+                @if (Model.HeroProduct != null)
+                {
+                    var heroSalePercent = GetSalePercent(Model.HeroProduct.OldPrice, Model.HeroProduct.Price);
+
+                    <a class="collection-v2-hero-product"
+                       asp-controller="Home"
+                       asp-action="ChiTietSanPham"
+                       asp-route-id="@Model.HeroProduct.Id">
+
+                        @if (heroSalePercent > 0)
+                        {
+                            <span class="collection-v2-sale-badge">
+                                -@heroSalePercent%
+                            </span>
+                        }
+
+                        <img src="@Model.HeroProduct.ImageUrl" alt="@Model.HeroProduct.AltText" />
+
+                        <div>
+                            <span>@Model.HeroProduct.CategoryName</span>
+                            <h2>@Model.HeroProduct.Name</h2>
+
+                            <p>
+                                <strong>@FormatPrice(Model.HeroProduct.Price)</strong>
+
+                                @if (heroSalePercent > 0)
+                                {
+                                    <del>@FormatPrice(Model.HeroProduct.OldPrice)</del>
+                                }
+                            </p>
+                        </div>
+                    </a>
+                }
+                else
+                {
+                    <div class="collection-v2-hero-empty">
+                        Chưa có sản phẩm nổi bật.
+                    </div>
+                }
             </div>
         </div>
     </section>
 
-    <section class="collection-featured">
+    <section class="collection-v2-nav-section">
+        <div class="container">
+            <div class="collection-v2-nav">
+                @foreach (var collection in Model.Collections)
+                {
+                    <a asp-controller="Home"
+                       asp-action="SanPham"
+                       asp-route-category="@collection.Slug">
+                        @collection.Title
+                        <span>@collection.ProductCount</span>
+                    </a>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="collection-v2-section">
         <div class="container">
             <div class="section-heading">
                 <div>
-                    <p class="eyebrow">Featured</p>
-                    <h2>Sản phẩm nổi bật</h2>
+                    <p class="eyebrow">Collections</p>
+                    <h2>Khám phá theo phong cách</h2>
                 </div>
 
-                <a class="btn btn-outline" asp-controller="Home" asp-action="SanPham">
-                    Xem tất cả sản phẩm
+                <a class="btn btn-outline"
+                   asp-controller="Home"
+                   asp-action="SanPham">
+                    Xem tất cả
                 </a>
             </div>
 
-            @if (!Model.FeaturedProducts.Any())
+            @if (!Model.Collections.Any())
             {
-                <div class="empty-collection">
-                    Chưa có sản phẩm nào trong hệ thống.
+                <div class="collection-v2-empty">
+                    Hiện chưa có bộ sưu tập nào có sản phẩm.
                 </div>
             }
             else
             {
-                <div class="collection-product-grid">
-                    @foreach (var product in Model.FeaturedProducts)
+                <div class="collection-v2-grid">
+                    @foreach (var collection in Model.Collections)
                     {
-                        <article class="collection-product-card">
-                            <div class="collection-product-image">
-                                <img src="@product.ImageUrl" alt="@product.AltText" />
-                            </div>
+                        <article class="collection-v2-card">
+                            <a class="collection-v2-card-image"
+                               asp-controller="Home"
+                               asp-action="SanPham"
+                               asp-route-category="@collection.Slug">
 
-                            <div class="collection-product-info">
-                                <span>@product.CategoryName</span>
-                                <h3>@product.Name</h3>
+                                <img src="@collection.ImageUrl" alt="@collection.Title" />
 
-                                <div class="collection-price">
-                                    <strong>@FormatPrice(product.Price)</strong>
+                                @if (collection.SaleCount > 0)
+                                {
+                                    <span>Sale @collection.SaleCount</span>
+                                }
+                            </a>
 
-                                    @if (product.OldPrice > product.Price)
+                            <div class="collection-v2-card-body">
+                                <div class="collection-v2-card-meta">
+                                    <span>@collection.ProductCount sản phẩm</span>
+
+                                    @if (collection.MinPrice > 0)
                                     {
-                                        <del>@FormatPrice(product.OldPrice)</del>
+                                        <strong>Từ @FormatPrice(collection.MinPrice)</strong>
                                     }
                                 </div>
 
-                                <form asp-controller="Cart"
-                                      asp-action="Add"
-                                      asp-route-id="@product.Id"
-                                      method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden"
-                                           name="returnUrl"
-                                           value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
+                                <h3>@collection.Title</h3>
+                                <p>@collection.Description</p>
 
-                                    <button type="submit" class="add-cart">
-                                        Thêm vào giỏ
-                                    </button>
-                                </form>
+                                @if (collection.Products.Any())
+                                {
+                                    <div class="collection-v2-thumbs">
+                                        @foreach (var product in collection.Products.Take(4))
+                                        {
+                                            <a asp-controller="Home"
+                                               asp-action="ChiTietSanPham"
+                                               asp-route-id="@product.Id">
+                                                <img src="@product.ImageUrl" alt="@product.AltText" />
+                                            </a>
+                                        }
+                                    </div>
+                                }
+
+                                <a class="collection-v2-link"
+                                   asp-controller="Home"
+                                   asp-action="SanPham"
+                                   asp-route-category="@collection.Slug">
+                                    Xem bộ sưu tập
+                                </a>
                             </div>
                         </article>
                     }
@@ -110,62 +207,66 @@
         </div>
     </section>
 
-    <section class="collection-list-section">
+    <section class="collection-v2-section collection-v2-featured">
         <div class="container">
             <div class="section-heading">
                 <div>
-                    <p class="eyebrow">Categories</p>
-                    <h2>Khám phá theo bộ sưu tập</h2>
+                    <p class="eyebrow">Selected items</p>
+                    <h2>Sản phẩm gợi ý</h2>
                 </div>
             </div>
 
-            <div class="collection-list">
-                @foreach (var collection in Model.Collections)
-                {
-                    <article class="collection-block">
-                        <div class="collection-block-head">
-                            <div>
-                                <span class="collection-label">@collection.Slug</span>
-                                <h3>@collection.Title</h3>
-                                <p>@collection.Description</p>
-                            </div>
+            @if (!Model.FeaturedProducts.Any())
+            {
+                <div class="collection-v2-empty">
+                    Chưa có sản phẩm nào trong hệ thống.
+                </div>
+            }
+            else
+            {
+                <div class="collection-v2-product-grid">
+                    @foreach (var product in Model.FeaturedProducts)
+                    {
+                        var salePercent = GetSalePercent(product.OldPrice, product.Price);
 
-                            <a class="btn btn-outline"
+                        <article class="collection-v2-product-card">
+                            <a class="collection-v2-product-image"
                                asp-controller="Home"
-                               asp-action="SanPham"
-                               asp-route-category="@collection.Slug">
-                                Xem bộ sưu tập
-                            </a>
-                        </div>
+                               asp-action="ChiTietSanPham"
+                               asp-route-id="@product.Id">
 
-                        @if (!collection.Products.Any())
-                        {
-                            <div class="empty-collection small">
-                                Bộ sưu tập này chưa có sản phẩm.
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="collection-mini-grid">
-                                @foreach (var product in collection.Products)
+                                @if (salePercent > 0)
                                 {
-                                    <a class="collection-mini-card"
-                                       asp-controller="Home"
-                                       asp-action="SanPham"
-                                       asp-route-category="@collection.Slug">
-                                        <img src="@product.ImageUrl" alt="@product.AltText" />
-
-                                        <div>
-                                            <h4>@product.Name</h4>
-                                            <span>@FormatPrice(product.Price)</span>
-                                        </div>
-                                    </a>
+                                    <span>-@salePercent%</span>
                                 }
+
+                                <img src="@product.ImageUrl" alt="@product.AltText" />
+                            </a>
+
+                            <div class="collection-v2-product-info">
+                                <p>@product.CategoryName</p>
+
+                                <h3>
+                                    <a asp-controller="Home"
+                                       asp-action="ChiTietSanPham"
+                                       asp-route-id="@product.Id">
+                                        @product.Name
+                                    </a>
+                                </h3>
+
+                                <div>
+                                    <strong>@FormatPrice(product.Price)</strong>
+
+                                    @if (salePercent > 0)
+                                    {
+                                        <del>@FormatPrice(product.OldPrice)</del>
+                                    }
+                                </div>
                             </div>
-                        }
-                    </article>
-                }
-            </div>
+                        </article>
+                    }
+                </div>
+            }
         </div>
     </section>
 

@@ -226,31 +226,81 @@ public class HomeController : Controller
     public async Task<IActionResult> BoSuuTap()
     {
         var categories = await _context.Categories
+            .AsNoTracking()
             .Where(c => c.Filter != "all")
-            .OrderBy(c => c.Id)
+            .OrderBy(c => c.Number)
             .ToListAsync();
 
         var activeProducts = await _context.Products
+            .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.Id)
             .ToListAsync();
 
-        var collections = categories.Select(category => new CollectionItemViewModel
+        bool HasCollectionTag(Product product, string slug)
         {
-            Title = category.Name,
-            Slug = category.Filter,
-            Description = category.Description,
-            Products = activeProducts
-                .Where(p => p.CategorySlug == category.Filter)
-                .Take(4)
-                .ToList()
-        }).ToList();
+            if (product.CategorySlug == slug)
+            {
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.ProductTags))
+            {
+                return false;
+            }
+
+            var tags = product.ProductTags
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            return tags.Contains(slug);
+        }
+
+        var collections = categories
+            .Select(category =>
+            {
+                var products = activeProducts
+                    .Where(p => HasCollectionTag(p, category.Filter))
+                    .OrderByDescending(p => p.Id)
+                    .ToList();
+
+                return new CollectionItemViewModel
+                {
+                    Title = category.Name,
+                    Slug = category.Filter,
+                    Description = string.IsNullOrWhiteSpace(category.Description)
+                        ? $"Khám phá các sản phẩm thuộc bộ sưu tập {category.Name}."
+                        : category.Description,
+                    Products = products.Take(4).ToList(),
+                    ProductCount = products.Count,
+                    SaleCount = products.Count(p => p.OldPrice > p.Price && p.OldPrice > 0),
+                    MinPrice = products.Any() ? products.Min(p => p.Price) : 0,
+                    ImageUrl = products.FirstOrDefault()?.ImageUrl ?? "/images/product-tshirt.svg"
+                };
+            })
+            .Where(c => c.ProductCount > 0)
+            .ToList();
+
+        var saleProducts = activeProducts
+            .Where(p => p.OldPrice > p.Price && p.OldPrice > 0)
+            .OrderByDescending(p => GetDiscountPercent(p.OldPrice, p.Price))
+            .Take(4)
+            .ToList();
+
+        var featuredProducts = activeProducts
+            .OrderByDescending(p => p.OldPrice > p.Price && p.OldPrice > 0)
+            .ThenByDescending(p => p.Id)
+            .Take(6)
+            .ToList();
 
         var viewModel = new CollectionPageViewModel
         {
             Collections = collections,
-            FeaturedProducts = activeProducts.Take(6).ToList(),
-            TotalProducts = activeProducts.Count
+            FeaturedProducts = featuredProducts,
+            SaleProducts = saleProducts,
+            HeroProduct = saleProducts.FirstOrDefault() ?? activeProducts.FirstOrDefault(),
+            TotalProducts = activeProducts.Count,
+            TotalCollections = collections.Count,
+            SaleProductsCount = saleProducts.Count
         };
 
         return View(viewModel);
