@@ -1,0 +1,315 @@
+@model MenStyle.Web.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Trung tâm quản trị";
+
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+
+    string GetOrderStatusClass(string status)
+    {
+        return status switch
+        {
+            "Chờ xác nhận" => "pending",
+            "Đang giao" => "shipping",
+            "Hoàn thành" => "done",
+            "Đã hủy" => "cancelled",
+            _ => "pending"
+        };
+    }
+}
+
+<main class="admin-center-page">
+    <div class="container admin-center-shell">
+        <aside class="admin-center-sidebar">
+            <div class="admin-center-brand">
+                <span>MENSTYLE</span>
+                <strong>ADMIN</strong>
+            </div>
+
+            <nav class="admin-center-nav" aria-label="Điều hướng quản trị">
+                <a href="#overview" class="active">
+                    <span>01</span>
+                    Tổng quan
+                </a>
+
+                <a href="#products">
+                    <span>02</span>
+                    Quản lý sản phẩm
+                </a>
+
+                <a href="#orders">
+                    <span>03</span>
+                    Quản lý đơn hàng
+                </a>
+            </nav>
+
+            <div class="admin-center-public-links">
+                <a asp-controller="Home" asp-action="Index">Về trang chủ</a>
+                <a asp-controller="Home" asp-action="SanPham">Xem cửa hàng</a>
+            </div>
+        </aside>
+
+        <div class="admin-center-content">
+            <header class="admin-center-header">
+                <div>
+                    <p class="eyebrow">ADMIN ONLY</p>
+                    <h1>Trung tâm quản trị</h1>
+                    <p>
+                        Toàn bộ chức năng quản lý sản phẩm, đơn hàng và thống kê
+                        được tập trung tại một nơi.
+                    </p>
+                </div>
+
+                <span class="admin-access-badge">Quyền Admin</span>
+            </header>
+
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="flash-message success">@successMessage</div>
+            }
+
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="flash-message error">@errorMessage</div>
+            }
+
+            <section id="overview" class="admin-center-section">
+                <div class="admin-center-section-head">
+                    <div>
+                        <span>Tổng quan</span>
+                        <h2>Tình hình hoạt động</h2>
+                    </div>
+                </div>
+
+                <div class="admin-center-metrics">
+                    @foreach (var metric in Model.Metrics)
+                    {
+                        <article class="admin-center-metric-card">
+                            <span>@metric.Title</span>
+                            <strong>@metric.Value</strong>
+                            <p>@metric.Note</p>
+                        </article>
+                    }
+                </div>
+            </section>
+
+            <section id="products" class="admin-center-section">
+                <div class="admin-center-section-head">
+                    <div>
+                        <span>Sản phẩm</span>
+                        <h2>Quản lý sản phẩm</h2>
+                        <p>Thêm, sửa, xóa và kiểm soát trạng thái hiển thị sản phẩm.</p>
+                    </div>
+
+                    <a class="btn btn-primary"
+                       asp-controller="AdminProducts"
+                       asp-action="Create">
+                        Thêm sản phẩm
+                    </a>
+                </div>
+
+                <div class="admin-center-table-card">
+                    <div class="admin-center-table-wrap">
+                        <table class="admin-center-table">
+                            <thead>
+                                <tr>
+                                    <th>Ảnh</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Danh mục</th>
+                                    <th>Giá</th>
+                                    <th>Tồn kho</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @if (!Model.Products.Any())
+                                {
+                                    <tr>
+                                        <td colspan="7" class="admin-center-empty">
+                                            Chưa có sản phẩm nào trong hệ thống.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    foreach (var product in Model.Products)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <img class="admin-center-product-image"
+                                                     src="@product.ImageUrl"
+                                                     alt="@product.AltText" />
+                                            </td>
+                                            <td>
+                                                <strong>@product.Name</strong>
+                                                <small>ID: @product.Id</small>
+                                            </td>
+                                            <td>
+                                                <strong>@product.CategoryName</strong>
+                                                <small>@product.CategorySlug</small>
+                                            </td>
+                                            <td>
+                                                <strong>@FormatPrice(product.Price)</strong>
+
+                                                @if (product.OldPrice > product.Price)
+                                                {
+                                                    <small>Giá cũ: @FormatPrice(product.OldPrice)</small>
+                                                }
+                                            </td>
+                                            <td>@product.StockQuantity</td>
+                                            <td>
+                                                <span class="admin-product-state @(product.IsActive ? "active" : "hidden")">
+                                                    @(product.IsActive ? "Đang hiển thị" : "Đang ẩn")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="admin-center-actions">
+                                                    <a class="edit"
+                                                       asp-controller="AdminProducts"
+                                                       asp-action="Edit"
+                                                       asp-route-id="@product.Id">
+                                                        Sửa
+                                                    </a>
+
+                                                    <a class="delete"
+                                                       asp-controller="AdminProducts"
+                                                       asp-action="Delete"
+                                                       asp-route-id="@product.Id">
+                                                        Xóa
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="orders" class="admin-center-section">
+                <div class="admin-center-section-head">
+                    <div>
+                        <span>Đơn hàng</span>
+                        <h2>Quản lý đơn hàng</h2>
+                        <p>Xem chi tiết và cập nhật trạng thái xử lý đơn hàng của khách.</p>
+                    </div>
+                </div>
+
+                <div class="admin-center-table-card">
+                    <div class="admin-center-table-wrap">
+                        <table class="admin-center-table admin-order-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Số SP</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @if (!Model.Orders.Any())
+                                {
+                                    <tr>
+                                        <td colspan="7" class="admin-center-empty">
+                                            Chưa có đơn hàng nào trong hệ thống.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    foreach (var order in Model.Orders)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@order.OrderCode</strong>
+                                                <small>@order.PaymentMethod</small>
+                                            </td>
+                                            <td>
+                                                <strong>@order.CustomerName</strong>
+                                                <small>@order.PhoneNumber</small>
+                                            </td>
+                                            <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@order.Items.Sum(i => i.Quantity)</td>
+                                            <td><strong>@FormatPrice(order.TotalAmount)</strong></td>
+                                            <td>
+                                                <span class="admin-order-state @GetOrderStatusClass(order.Status)">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="admin-order-actions">
+                                                    <form asp-controller="AdminOrders"
+                                                          asp-action="UpdateStatus"
+                                                          asp-route-id="@order.Id"
+                                                          method="post">
+                                                        @Html.AntiForgeryToken()
+
+                                                        <input type="hidden" name="returnUrl" value="/Admin#orders" />
+
+                                                        <select name="status" aria-label="Trạng thái đơn @order.OrderCode">
+                                                            @foreach (var status in Model.OrderStatuses)
+                                                            {
+                                                                <option value="@status" selected="@(status == order.Status)">
+                                                                    @status
+                                                                </option>
+                                                            }
+                                                        </select>
+
+                                                        <button type="submit">Cập nhật</button>
+                                                    </form>
+
+                                                    <a asp-controller="AdminOrders"
+                                                       asp-action="Details"
+                                                       asp-route-id="@order.Id">
+                                                        Chi tiết
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const links = document.querySelectorAll(".admin-center-nav a");
+            const sections = document.querySelectorAll(".admin-center-section");
+
+            function activateLink() {
+                let currentId = "overview";
+
+                sections.forEach(section => {
+                    if (window.scrollY >= section.offsetTop - 180) {
+                        currentId = section.id;
+                    }
+                });
+
+                links.forEach(link => {
+                    link.classList.toggle("active", link.getAttribute("href") === "#" + currentId);
+                });
+            }
+
+            window.addEventListener("scroll", activateLink, { passive: true });
+            activateLink();
+        });
+    </script>
+}

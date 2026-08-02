@@ -3,8 +3,6 @@
 @{
     ViewData["Title"] = "Sản phẩm";
 
-    var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
-
     string FormatPrice(decimal price)
     {
         return $"{price:N0}đ".Replace(",", ".");
@@ -57,14 +55,6 @@
                         </button>
                     </form>
 
-                    @if (isAdmin)
-                    {
-                        <a class="manage-product-btn"
-                           asp-controller="AdminProducts"
-                           asp-action="Index">
-                            Quản lý sản phẩm
-                        </a>
-                    }
                 </div>
             </div>
 
@@ -117,15 +107,6 @@
                         <p>Hiện chưa có sản phẩm nào trong danh mục này.</p>
                     }
 
-                    @if (isAdmin)
-                    {
-                        <a class="btn btn-primary"
-                           style="margin-top: 18px;"
-                           asp-controller="AdminProducts"
-                           asp-action="Index">
-                            Vào trang quản lý sản phẩm
-                        </a>
-                    }
                 </div>
             }
             else

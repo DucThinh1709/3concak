@@ -27,6 +27,11 @@
             <div class="flash-message success">@successMessage</div>
         }
 
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="flash-message error">@errorMessage</div>
+        }
+
         <section class="order-detail-layout">
             <div class="order-detail-main">
                 <div class="order-box">
@@ -101,8 +106,9 @@
                     </form>
 
                     <a class="btn btn-outline full mt-12"
-                       asp-controller="AdminOrders"
-                       asp-action="Index">
+                       asp-controller="Admin"
+                       asp-action="Index"
+                       asp-fragment="orders">
                         Quay lại danh sách
                     </a>
                 </div>
