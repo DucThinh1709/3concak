@@ -56,14 +56,20 @@ public class HomeController : Controller
             .OrderBy(_ => Guid.NewGuid())
             .ToList();
 
+        var heroProducts = randomProducts
+            .Where(p => !string.IsNullOrWhiteSpace(p.ImageUrl))
+            .Take(8)
+            .ToList();
+
         var viewModel = new HomeViewModel
         {
             Categories = [],
             Products = [],
 
-            HeroProduct = randomProducts.FirstOrDefault(),
+            HeroProduct = heroProducts.FirstOrDefault() ?? randomProducts.FirstOrDefault(),
             IntroProducts = randomProducts.Take(4).ToList(),
             SliderProducts = randomProducts.Take(10).ToList(),
+            HeroProducts = heroProducts,
 
             Metrics =
             [

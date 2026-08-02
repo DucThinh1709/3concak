@@ -13,4 +13,7 @@ public class HomeViewModel
     public List<Product> IntroProducts { get; set; } = [];
 
     public List<Product> SliderProducts { get; set; } = [];
+
+    public List<Product> HeroProducts { get; set; } = [];
+
 }

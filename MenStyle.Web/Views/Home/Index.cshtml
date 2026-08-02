@@ -1,10 +1,48 @@
 @model HomeViewModel
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "MenStyle For Men";
 
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+
+    int GetSalePercent(decimal oldPrice, decimal price)
+    {
+        if (oldPrice <= 0 || oldPrice <= price)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((double)((oldPrice - price) / oldPrice * 100));
+    }
+
     var heroImage = Model.HeroProduct?.ImageUrl ?? "/images/hero-fashion.svg";
     var heroAlt = Model.HeroProduct?.AltText ?? "MENSTYLE hero image";
+    var heroName = Model.HeroProduct?.Name ?? "MENSTYLE Collection";
+    var heroCategory = Model.HeroProduct?.CategoryName ?? "New Collection";
+    var heroPrice = Model.HeroProduct != null ? FormatPrice(Model.HeroProduct.Price) : "";
+    var heroOldPrice = Model.HeroProduct != null && Model.HeroProduct.OldPrice > Model.HeroProduct.Price
+        ? FormatPrice(Model.HeroProduct.OldPrice)
+        : "";
+    var heroSalePercent = Model.HeroProduct != null
+        ? GetSalePercent(Model.HeroProduct.OldPrice, Model.HeroProduct.Price)
+        : 0;
+
+    var heroSlides = Model.HeroProducts.Select(p => new
+    {
+        id = p.Id,
+        name = p.Name,
+        category = p.CategoryName,
+        imageUrl = p.ImageUrl,
+        altText = p.AltText,
+        price = FormatPrice(p.Price),
+        oldPrice = p.OldPrice > p.Price ? FormatPrice(p.OldPrice) : "",
+        salePercent = GetSalePercent(p.OldPrice, p.Price),
+        url = Url.Action("ChiTietSanPham", "Home", new { id = p.Id })
+    }).ToList();
 
     var introCards = new[]
     {
@@ -20,7 +58,7 @@
 }
 
 <main>
-    <section id="home" class="hero">
+    <section id="home" class="hero hero-home-pro">
         <div class="container hero-grid">
             <div class="hero-content">
                 <p class="eyebrow">New Collection 2026</p>
@@ -49,8 +87,8 @@
 
                 <div class="hero-stats">
                     <div>
-                        <strong>120+</strong>
-                        <span>Mẫu sản phẩm</span>
+                        <strong>@Model.SliderProducts.Count+</strong>
+                        <span>Mẫu nổi bật</span>
                     </div>
 
                     <div>
@@ -65,14 +103,39 @@
                 </div>
             </div>
 
-            <div class="hero-card">
-                <div class="hero-image-frame">
-                    <img src="@heroImage" alt="@heroAlt" />
+            <div class="hero-card hero-product-showcase">
+                <a id="heroProductLink"
+                   class="hero-image-frame hero-dynamic-frame"
+                   href="@(Model.HeroProduct != null ? Url.Action("ChiTietSanPham", "Home", new { id = Model.HeroProduct.Id }) : Url.Action("SanPham", "Home"))">
+
+                    <img id="heroProductImage"
+                         src="@heroImage"
+                         alt="@heroAlt" />
+
+                    <div class="hero-product-caption">
+                        <span id="heroProductCategory">@heroCategory</span>
+                        <strong id="heroProductName">@heroName</strong>
+
+                        <p>
+                            <b id="heroProductPrice">@heroPrice</b>
+
+                            <del id="heroProductOldPrice"
+                                 class="@(string.IsNullOrWhiteSpace(heroOldPrice) ? "is-hidden" : "")">
+                                @heroOldPrice
+                            </del>
+                        </p>
+                    </div>
+                </a>
+
+                <div id="heroSaleCard"
+                     class="floating-card sale-card @(heroSalePercent <= 0 ? "is-hidden" : "")">
+                    <span>Flash Sale</span>
+                    <strong id="heroSalePercent">-@heroSalePercent%</strong>
                 </div>
 
-                <div class="floating-card sale-card">
-                    <span>Flash Sale</span>
-                    <strong>-30%</strong>
+                <div class="floating-card hero-style-card">
+                    <span>Đang xem</span>
+                    <strong id="heroStyleName">@heroCategory</strong>
                 </div>
             </div>
         </div>
@@ -163,7 +226,7 @@
             <div class="container">
                 <div class="section-title">
                     <p>Admin Dashboard</p>
-                    <h2>Khu vực quản trị</h2>
+                    <h2>Khu vực quản trị    </h2>
                 </div>
 
                 <div class="dashboard-grid">
@@ -230,3 +293,84 @@
         </section>
     }
 </main>
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const heroProducts = @Html.Raw(JsonSerializer.Serialize(heroSlides));
+
+            if (!heroProducts || heroProducts.length <= 1) {
+                return;
+            }
+
+            const image = document.getElementById("heroProductImage");
+            const link = document.getElementById("heroProductLink");
+            const category = document.getElementById("heroProductCategory");
+            const name = document.getElementById("heroProductName");
+            const price = document.getElementById("heroProductPrice");
+            const oldPrice = document.getElementById("heroProductOldPrice");
+            const saleCard = document.getElementById("heroSaleCard");
+            const salePercent = document.getElementById("heroSalePercent");
+            const styleName = document.getElementById("heroStyleName");
+
+            let currentIndex = 0;
+
+            function pickNextProduct() {
+                if (heroProducts.length <= 1) {
+                    return heroProducts[0];
+                }
+
+                let nextIndex = currentIndex;
+
+                while (nextIndex === currentIndex) {
+                    nextIndex = Math.floor(Math.random() * heroProducts.length);
+                }
+
+                currentIndex = nextIndex;
+                return heroProducts[currentIndex];
+            }
+
+            function updateHeroProduct(product) {
+                if (!product) return;
+
+                image.classList.add("is-changing");
+
+                setTimeout(function () {
+                    image.src = product.imageUrl || "/images/hero-fashion.svg";
+                    image.alt = product.altText || product.name || "MENSTYLE product";
+
+                    link.href = product.url || "/Home/SanPham";
+
+                    category.textContent = product.category || "MENSTYLE";
+                    name.textContent = product.name || "Sản phẩm MENSTYLE";
+                    price.textContent = product.price || "";
+
+                    if (product.oldPrice) {
+                        oldPrice.textContent = product.oldPrice;
+                        oldPrice.classList.remove("is-hidden");
+                    } else {
+                        oldPrice.textContent = "";
+                        oldPrice.classList.add("is-hidden");
+                    }
+
+                    if (product.salePercent && product.salePercent > 0) {
+                        salePercent.textContent = "-" + product.salePercent + "%";
+                        saleCard.classList.remove("is-hidden");
+                    } else {
+                        salePercent.textContent = "";
+                        saleCard.classList.add("is-hidden");
+                    }
+
+                    if (styleName) {
+                        styleName.textContent = product.category || "MENSTYLE";
+                    }
+
+                    image.classList.remove("is-changing");
+                }, 220);
+            }
+
+            setInterval(function () {
+                updateHeroProduct(pickNextProduct());
+            }, 4200);
+        });
+    </script>
+}

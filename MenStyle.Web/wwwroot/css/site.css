@@ -6633,3 +6633,116 @@ header,
         height: 300px;
     }
 }
+/* ================================
+   HOME HERO DYNAMIC PRODUCT
+================================ */
+
+.hero-home-pro {
+    position: relative;
+}
+
+.hero-product-showcase {
+    position: relative;
+}
+
+.hero-dynamic-frame {
+    display: block;
+    text-decoration: none;
+}
+
+    .hero-dynamic-frame img {
+        background: #f0e8dc;
+        border-radius: 28px;
+        padding: 12px;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+        .hero-dynamic-frame img.is-changing {
+            opacity: 0;
+            transform: scale(0.96) translateY(8px);
+        }
+
+.hero-product-caption {
+    position: absolute;
+    left: 46px;
+    right: 46px;
+    bottom: 38px;
+    z-index: 3;
+    padding: 18px 20px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(12px);
+}
+
+    .hero-product-caption span {
+        display: block;
+        color: #c89542;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        margin-bottom: 5px;
+    }
+
+    .hero-product-caption strong {
+        display: block;
+        color: #111111;
+        font-size: 22px;
+        line-height: 1.1;
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    .hero-product-caption p {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .hero-product-caption b {
+        color: #d62828;
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+    .hero-product-caption del {
+        color: #8f857a;
+        font-weight: 800;
+    }
+
+    .hero-product-caption .is-hidden,
+    .sale-card.is-hidden {
+        display: none;
+    }
+
+.hero-style-card {
+    right: 0;
+    bottom: 64px;
+}
+
+    .hero-style-card strong {
+        font-size: 18px;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+.sale-card strong {
+    color: #d62828;
+}       
+
+@media (max-width: 780px) {
+    .hero-product-caption {
+        left: 28px;
+        right: 28px;
+        bottom: 28px;
+    }
+
+    .hero-style-card {
+        display: none;
+    }
+}
