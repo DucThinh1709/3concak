@@ -1,0 +1,477 @@
+/* MENSTYLE BUTTON SYSTEM V2
+   File này được nạp sau site.css để bảo đảm quy tắc nút không bị ghi đè. */
+
+:root {
+    --button-height: 48px;
+    --button-height-compact: 40px;
+    --button-radius: 999px;
+    --button-border: #bfae98;
+    --button-dark: #111318;
+    --button-accent: #c89542;
+    --button-danger: #b93838;
+}
+
+button,
+.btn,
+.cart-btn,
+.nav-profile-link,
+.nav-login-link,
+.nav-pill,
+.product-detail-btn,
+.collection-v2-link,
+.edit-btn,
+.delete-btn,
+.remove-btn,
+.clear-cart-btn,
+.address-search-btn,
+.map-location-btn,
+.map-confirm-btn,
+.map-edit-btn,
+.random-color-btn,
+.avatar-upload-btn {
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* Các hàng chứa nhiều nút luôn dùng chung trục giữa và khoảng cách. */
+.hero-actions,
+.profile-actions,
+.admin-actions,
+.product-list-actions,
+.map-action-row,
+.admin-center-actions,
+.admin-order-actions form,
+.order-detail-actions {
+    align-items: center;
+    gap: 12px;
+}
+
+.hero-actions,
+.profile-actions,
+.admin-actions,
+.product-list-actions,
+.map-action-row,
+.admin-center-actions {
+    flex-wrap: wrap;
+}
+
+/* Nút chức năng chính. */
+.btn,
+.btn-auth,
+.add-cart,
+.product-detail-btn,
+.collection-v2-link,
+.product-search-form button,
+.nav-search-form .search-btn,
+.address-search-btn,
+.map-location-btn,
+.map-confirm-btn,
+.map-edit-btn,
+.random-color-btn,
+.avatar-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--button-height);
+    padding: 0 22px;
+    border: 1.5px solid var(--button-border);
+    border-radius: var(--button-radius);
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease,
+        border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.btn-primary,
+.btn-auth,
+.add-cart,
+.product-detail-btn,
+.collection-v2-link,
+.product-search-form button,
+.address-search-btn,
+.map-location-btn,
+.avatar-upload-btn {
+    border-color: var(--button-dark);
+    background: var(--button-dark);
+    color: #ffffff;
+}
+
+.btn-outline,
+.map-edit-btn {
+    border-color: var(--button-dark);
+    background: #ffffff;
+    color: var(--button-dark);
+}
+
+.map-confirm-btn,
+.random-color-btn {
+    border-color: #a97018;
+    background: var(--button-accent);
+    color: #111318;
+}
+
+.btn:hover,
+.btn-auth:hover,
+.add-cart:hover,
+.product-detail-btn:hover,
+.collection-v2-link:hover,
+.product-search-form button:hover,
+.nav-search-form .search-btn:hover,
+.address-search-btn:hover,
+.map-location-btn:hover,
+.map-confirm-btn:hover,
+.map-edit-btn:hover,
+.random-color-btn:hover,
+.avatar-upload-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--button-accent);
+    box-shadow: 0 12px 26px rgba(17, 19, 24, 0.16);
+}
+
+/* Header: đây là nhóm nhìn thấy rõ nhất sau khi cập nhật. */
+.navbar {
+    gap: 18px;
+}
+
+.nav-links {
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-links > .nav-main-button,
+.nav-links > .nav-mega-item > .nav-main-button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 108px;
+    height: 46px;
+    min-height: 46px;
+    margin: 0;
+    padding: 0 12px;
+    border: 1.5px solid var(--button-border);
+    border-radius: var(--button-radius);
+    background: #ffffff;
+    color: var(--button-dark);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.18s ease, box-shadow 0.18s ease,
+        border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.nav-links > .nav-main-button:hover,
+.nav-links > .nav-mega-item:hover > .nav-main-button {
+    border-color: var(--button-accent);
+    background: #fffaf2;
+    color: var(--button-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(17, 19, 24, 0.1);
+}
+
+.nav-mega-item {
+    height: 46px;
+    align-items: center;
+}
+
+.mega-trigger {
+    gap: 7px;
+}
+
+.mega-trigger span {
+    flex: 0 0 auto;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cart-btn,
+.nav-profile-link,
+.nav-login-link,
+.nav-pill,
+.logout-form button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    min-height: 46px;
+    margin: 0;
+    padding: 0 17px;
+    border: 1.5px solid var(--button-border);
+    border-radius: var(--button-radius);
+    background: #ffffff;
+    color: var(--button-dark);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease,
+        border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.cart-btn {
+    min-width: 100px;
+}
+
+.nav-profile-link {
+    max-width: 220px;
+    padding: 5px 17px 5px 5px;
+}
+
+.nav-profile-text {
+    line-height: 1;
+}
+
+.nav-login-link,
+.dark-pill {
+    border-color: var(--button-dark);
+    background: var(--button-dark);
+    color: #ffffff;
+}
+
+.admin-entry-link {
+    border-color: #a97018;
+    background: var(--button-accent);
+    color: #111318;
+}
+
+.logout-form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.cart-btn:hover,
+.nav-profile-link:hover,
+.nav-pill:hover,
+.logout-form button:hover {
+    border-color: var(--button-accent);
+    background: #fffaf2;
+    color: var(--button-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(17, 19, 24, 0.1);
+}
+
+.nav-login-link:hover,
+.dark-pill:hover,
+.admin-entry-link:hover {
+    border-color: #a97018;
+    background: var(--button-accent);
+    color: #111318;
+}
+
+.cart-btn span {
+    flex: 0 0 auto;
+    margin-left: 8px;
+}
+
+/* Nút nhỏ trong bảng và giỏ hàng. */
+.edit-btn,
+.delete-btn,
+.remove-btn,
+.clear-cart-btn,
+.admin-center-actions a,
+.admin-order-actions > a,
+.admin-order-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--button-height-compact);
+    padding: 0 15px;
+    border: 1.5px solid var(--button-border);
+    border-radius: var(--button-radius);
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.edit-btn {
+    border-color: #bba98f;
+}
+
+.delete-btn,
+.remove-btn {
+    border-color: #d99f9f;
+}
+
+.clear-cart-btn {
+    width: 100%;
+    min-height: 46px;
+    border-color: #cc928a;
+    background: #ffffff;
+    color: var(--button-danger);
+}
+
+.admin-center-actions a,
+.admin-order-actions > a,
+.admin-order-actions button {
+    min-height: 38px;
+    padding: 0 13px;
+    border-radius: 10px;
+}
+
+.admin-center-actions .edit,
+.admin-order-actions > a {
+    border-color: #9fb9d9;
+}
+
+.admin-center-actions .delete {
+    border-color: #dfa3a3;
+}
+
+.admin-order-actions button {
+    border-color: var(--button-dark);
+}
+
+.admin-order-actions form {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.admin-order-actions select {
+    min-height: 38px;
+    border-width: 1.5px;
+}
+
+/* Nút lựa chọn nhỏ. */
+.product-tag-chip,
+.admin-color-chip,
+.chatbot-quick button,
+.chat-quick-replies button {
+    border-width: 1.5px;
+}
+
+.qty-box button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--button-dark);
+    line-height: 1;
+}
+
+.mobile-toggle {
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+    border: 1.5px solid var(--button-dark);
+}
+
+.chatbot-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #3a3a3a;
+}
+
+.chatbot-header-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: var(--button-radius);
+}
+
+.chatbot-form button {
+    min-height: 42px;
+    border: 1.5px solid var(--button-dark);
+}
+
+.search-result-note a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1.5px solid var(--button-accent);
+    border-radius: var(--button-radius);
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-center-public-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.nav-main-button:focus-visible,
+.cart-btn:focus-visible,
+.nav-profile-link:focus-visible,
+.nav-pill:focus-visible,
+.product-detail-btn:focus-visible,
+.collection-v2-link:focus-visible,
+.edit-btn:focus-visible,
+.delete-btn:focus-visible {
+    outline: 3px solid rgba(200, 149, 66, 0.4);
+    outline-offset: 2px;
+}
+
+button:disabled,
+.btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.58;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 980px) {
+    .navbar.open .nav-links {
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .navbar.open .nav-main-button,
+    .navbar.open .nav-mega-item {
+        width: 100%;
+        max-width: none;
+    }
+
+    .navbar.open .nav-actions {
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .navbar.open .nav-actions > a,
+    .navbar.open .nav-actions > form,
+    .navbar.open .nav-actions > form > button {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .btn,
+    .btn-auth,
+    .product-detail-btn,
+    .collection-v2-link,
+    .product-search-form button,
+    .address-search-btn,
+    .search-result-note a {
+        width: 100%;
+    }
+}

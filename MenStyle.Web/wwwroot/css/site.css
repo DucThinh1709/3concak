@@ -7199,3 +7199,338 @@ th {
         width: 100%;
     }
 }
+
+/* ================================
+   UNIFIED ACTION BUTTON SYSTEM
+================================ */
+
+/* Chuẩn hóa các nút chức năng chính trên toàn website. */
+.btn,
+.btn-auth,
+.add-cart,
+.product-detail-btn,
+.collection-v2-link,
+.product-search-form button,
+.nav-search-form .search-btn,
+.address-search-btn,
+.map-location-btn,
+.map-confirm-btn,
+.map-edit-btn,
+.random-color-btn,
+.avatar-upload-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 20px;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease,
+        color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.btn-primary,
+.btn-auth,
+.add-cart,
+.product-detail-btn,
+.collection-v2-link,
+.product-search-form button,
+.address-search-btn,
+.map-location-btn,
+.avatar-upload-btn {
+    border-color: #111318;
+}
+
+.btn-outline {
+    border-color: #111318;
+    background: #ffffff;
+}
+
+.map-confirm-btn,
+.random-color-btn {
+    border-color: #c89542;
+}
+
+.map-edit-btn {
+    border-color: #d8ccbd;
+}
+
+.btn:hover,
+.btn-auth:hover,
+.add-cart:hover,
+.product-detail-btn:hover,
+.collection-v2-link:hover,
+.product-search-form button:hover,
+.nav-search-form .search-btn:hover,
+.address-search-btn:hover,
+.map-location-btn:hover,
+.map-confirm-btn:hover,
+.map-edit-btn:hover,
+.random-color-btn:hover,
+.avatar-upload-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(17, 19, 24, 0.13);
+}
+
+/* Header: mọi nút cùng chiều cao, cùng đường viền và cùng trục giữa. */
+.nav-actions {
+    gap: 12px;
+    align-items: center;
+}
+
+.cart-btn,
+.nav-profile-link,
+.nav-login-link,
+.nav-pill,
+.logout-form button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 16px;
+    border: 1px solid #e0d5c7;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #111318;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    transition: border-color 0.18s ease, background 0.18s ease,
+        color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.nav-profile-link {
+    max-width: 220px;
+    padding: 4px 16px 4px 5px;
+}
+
+.nav-login-link,
+.dark-pill {
+    border-color: #111318;
+    background: #111318;
+    color: #ffffff;
+}
+
+.admin-entry-link {
+    border-color: #c89542;
+    background: #c89542;
+    color: #111318;
+}
+
+.logout-form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.cart-btn:hover,
+.nav-profile-link:hover,
+.nav-pill:hover,
+.logout-form button:hover {
+    border-color: #c89542;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(17, 19, 24, 0.09);
+}
+
+.nav-login-link:hover,
+.dark-pill:hover {
+    border-color: #c89542;
+    background: #c89542;
+    color: #111318;
+}
+
+.cart-btn span {
+    margin-left: 8px;
+}
+
+/* Nút nhỏ trong bảng, giỏ hàng và khu vực quản trị. */
+.edit-btn,
+.delete-btn,
+.remove-btn,
+.clear-cart-btn,
+.admin-center-actions a,
+.admin-order-actions > a,
+.admin-order-actions button {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 15px;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.edit-btn {
+    border-color: #d8ccbd;
+}
+
+.delete-btn,
+.remove-btn {
+    border-color: #ecc7c7;
+}
+
+.clear-cart-btn {
+    border-color: #ddb9b3;
+    background: #ffffff;
+    min-height: 44px;
+}
+
+.admin-center-actions a,
+.admin-order-actions > a,
+.admin-order-actions button {
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+}
+
+.admin-center-actions .edit,
+.admin-order-actions > a {
+    border-color: #c8d8ec;
+}
+
+.admin-center-actions .delete {
+    border-color: #ecc5c5;
+}
+
+.admin-order-actions button {
+    border-color: #111318;
+}
+
+.admin-order-actions form {
+    align-items: stretch;
+}
+
+.admin-order-actions select {
+    min-height: 36px;
+}
+
+/* Các nút tròn/nhỏ vẫn giữ kích thước riêng nhưng có viền rõ ràng. */
+.qty-box button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #111318;
+    line-height: 1;
+}
+
+.mobile-toggle {
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+    border: 1px solid #111318;
+}
+
+.chatbot-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #2c2c2c;
+}
+
+.chatbot-header-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+}
+
+.chatbot-form button {
+    min-height: 42px;
+    border: 1px solid #111318;
+}
+
+.search-result-note a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid #c89542;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.admin-center-public-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+.cart-btn:focus-visible,
+.nav-profile-link:focus-visible,
+.nav-pill:focus-visible,
+.product-detail-btn:focus-visible,
+.collection-v2-link:focus-visible,
+.edit-btn:focus-visible,
+.delete-btn:focus-visible {
+    outline: 3px solid rgba(200, 149, 66, 0.35);
+    outline-offset: 2px;
+}
+
+button:disabled,
+.btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.58;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 980px) {
+    .navbar.open .nav-actions {
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .navbar.open .nav-actions > a,
+    .navbar.open .nav-actions > form,
+    .navbar.open .nav-actions > form > button {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .btn,
+    .btn-auth,
+    .product-detail-btn,
+    .collection-v2-link,
+    .product-search-form button,
+    .address-search-btn {
+        width: 100%;
+    }
+
+    .search-result-note a {
+        width: 100%;
+    }
+}

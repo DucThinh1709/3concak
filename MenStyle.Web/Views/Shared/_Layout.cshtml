@@ -56,6 +56,7 @@
           rel="stylesheet">
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/button-system.css" asp-append-version="true" />
 </head>
 
 <body>
@@ -78,14 +79,15 @@
             </button>
 
             <div class="nav-links">
-                <a asp-controller="Home"
+                <a class="nav-main-button"
+                   asp-controller="Home"
                    asp-action="Index"
                    asp-fragment="home">
                     Trang chủ
                 </a>
 
                 <div class="nav-mega-item">
-                    <a class="nav-link mega-trigger"
+                    <a class="nav-link mega-trigger nav-main-button"
                        asp-controller="Home"
                        asp-action="SanPham">
                         Sản phẩm <span>⌄</span>
@@ -192,7 +194,8 @@
                     </div>
                 </div>
 
-                <a asp-controller="Home" 
+                <a class="nav-main-button"
+                   asp-controller="Home"
                    asp-action="BoSuuTap">
                    Bộ sưu tập
                </a>
