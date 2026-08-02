@@ -17,13 +17,9 @@ public class AdminProductsController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var products = await _context.Products
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
-
-        return View(products);
+        return Redirect("/Admin#products");
     }
 
     [HttpGet]
@@ -91,7 +87,7 @@ public class AdminProductsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Thêm sản phẩm thành công.";
-        return RedirectToAction(nameof(Index));
+        return Redirect("/Admin#products");
     }
 
     [HttpGet]
@@ -172,7 +168,7 @@ public class AdminProductsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công.";
-        return RedirectToAction(nameof(Index));
+        return Redirect("/Admin#products");
     }
 
     [HttpGet]
@@ -204,7 +200,7 @@ public class AdminProductsController : Controller
         await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Xóa sản phẩm thành công.";
-        return RedirectToAction(nameof(Index));
+        return Redirect("/Admin#products");
     }
 
     private async Task LoadCategorySelectListAsync(string? selectedCategorySlug = null)

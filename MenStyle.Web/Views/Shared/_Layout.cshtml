@@ -245,6 +245,15 @@
                         Đơn hàng
                     </a>
 
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="nav-pill admin-entry-link"
+                           asp-controller="Admin"
+                           asp-action="Index">
+                            Quản trị
+                        </a>
+                    }
+
                     <form class="logout-form"
                           asp-controller="Account"
                           asp-action="Logout"

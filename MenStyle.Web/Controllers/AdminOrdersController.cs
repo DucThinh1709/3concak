@@ -8,6 +8,14 @@ namespace MenStyle.Web.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminOrdersController : Controller
 {
+    private static readonly string[] AllowedStatuses =
+    [
+        "Chờ xác nhận",
+        "Đang giao",
+        "Hoàn thành",
+        "Đã hủy"
+    ];
+
     private readonly ApplicationDbContext _context;
 
     public AdminOrdersController(ApplicationDbContext context)
@@ -15,14 +23,9 @@ public class AdminOrdersController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var orders = await _context.CustomerOrders
-            .Include(o => o.Items)
-            .OrderByDescending(o => o.CreatedAt)
-            .ToListAsync();
-
-        return View(orders);
+        return Redirect("/Admin#orders");
     }
 
     public async Task<IActionResult> Details(int id)
@@ -36,20 +39,14 @@ public class AdminOrdersController : Controller
             return NotFound();
         }
 
-        ViewBag.Statuses = new List<string>
-        {
-            "Chờ xác nhận",
-            "Đang giao",
-            "Hoàn thành",
-            "Đã hủy"
-        };
+        ViewBag.Statuses = AllowedStatuses.ToList();
 
         return View(order);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateStatus(int id, string status)
+    public async Task<IActionResult> UpdateStatus(int id, string status, string? returnUrl = null)
     {
         var order = await _context.CustomerOrders.FindAsync(id);
 
@@ -58,10 +55,26 @@ public class AdminOrdersController : Controller
             return NotFound();
         }
 
+        if (!AllowedStatuses.Contains(status))
+        {
+            TempData["ErrorMessage"] = "Trạng thái đơn hàng không hợp lệ.";
+            return RedirectAfterUpdate(id, returnUrl);
+        }
+
         order.Status = status;
         await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = "Cập nhật trạng thái đơn hàng thành công.";
+        return RedirectAfterUpdate(id, returnUrl);
+    }
+
+    private IActionResult RedirectAfterUpdate(int id, string? returnUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
         return RedirectToAction(nameof(Details), new { id });
     }
 }
