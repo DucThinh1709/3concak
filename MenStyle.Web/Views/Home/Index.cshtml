@@ -44,6 +44,19 @@
         url = Url.Action("ChiTietSanPham", "Home", new { id = p.Id })
     }).ToList();
 
+    var heroSlides = Model.HeroProducts.Select(p => new
+    {
+        id = p.Id,
+        name = p.Name,
+        category = p.CategoryName,
+        imageUrl = p.ImageUrl,
+        altText = p.AltText,
+        price = FormatPrice(p.Price),
+        oldPrice = p.OldPrice > p.Price ? FormatPrice(p.OldPrice) : "",
+        salePercent = GetSalePercent(p.OldPrice, p.Price),
+        url = Url.Action("ChiTietSanPham", "Home", new { id = p.Id })
+    }).ToList();
+
     var introCards = new[]
     {
         new { Label = "Phong cách", Title = "Modern", Text = "Thiết kế dành cho nam giới trẻ trung, lịch lãm và năng động." },
