@@ -22,6 +22,47 @@
     var defaultColor = Model.Colors.FirstOrDefault() ?? "";
 
     var salePercent = GetSalePercent(Model.Product.OldPrice, Model.Product.Price);
+
+    string NormalizeSizeKey(string size)
+    {
+        var key = (size ?? "")
+            .Trim()
+            .ToUpperInvariant()
+            .Replace(" ", "")
+            .Replace("-", "");
+
+        return key switch
+        {
+            "2XL" => "XXL",
+            "XXLARGE" => "XXL",
+            "3XLARGE" => "3XL",
+            "ONESIZE" => "FREESIZE",
+            "FREE" => "FREESIZE",
+            _ => key
+        };
+    }
+
+    (int MinHeight, int MaxHeight, int MinWeight, int MaxWeight)? GetSizeRange(string size)
+    {
+        return NormalizeSizeKey(size) switch
+        {
+            "XS" => (145, 157, 35, 47),
+            "S" => (150, 163, 40, 53),
+            "M" => (156, 169, 50, 63),
+            "L" => (163, 176, 60, 73),
+            "XL" => (170, 183, 70, 83),
+            "XXL" => (175, 189, 80, 96),
+            "3XL" => (178, 195, 90, 112),
+            "FREESIZE" => (150, 185, 40, 90),
+            _ => null
+        };
+    }
+
+    var productSizeGuideRows = Model.Sizes
+        .Select(size => new { Size = size, Range = GetSizeRange(size) })
+        .Where(item => item.Range.HasValue)
+        .Select(item => new { item.Size, Range = item.Range!.Value })
+        .ToList();
 }
 
 <main class="product-detail-page">
@@ -139,6 +180,117 @@
                             }
                         </div>
                     </div>
+
+                    <details class="size-guide-card" open>
+                        <summary>
+                            <span>
+                                <strong>Gợi ý chọn size</strong>
+                                <small>Theo chiều cao và cân nặng của bạn</small>
+                            </span>
+                            <span class="size-guide-chevron" aria-hidden="true">⌄</span>
+                        </summary>
+
+                        <div class="size-guide-content">
+                            <p class="size-guide-intro">
+                                Bảng dưới đây chỉ hiển thị các size hiện có của
+                                <strong>@Model.Product.Name</strong>.
+                            </p>
+
+                            @if (productSizeGuideRows.Any())
+                            {
+                                <div class="size-recommend-form" aria-label="Nhập số đo để gợi ý size">
+                                    <label for="customerHeight">
+                                        Chiều cao
+                                        <span class="size-input-wrap">
+                                            <input id="customerHeight"
+                                                   type="number"
+                                                   min="130"
+                                                   max="210"
+                                                   step="1"
+                                                   inputmode="numeric"
+                                                   placeholder="Ví dụ: 170" />
+                                            <small>cm</small>
+                                        </span>
+                                    </label>
+
+                                    <label for="customerWeight">
+                                        Cân nặng
+                                        <span class="size-input-wrap">
+                                            <input id="customerWeight"
+                                                   type="number"
+                                                   min="30"
+                                                   max="150"
+                                                   step="1"
+                                                   inputmode="numeric"
+                                                   placeholder="Ví dụ: 65" />
+                                            <small>kg</small>
+                                        </span>
+                                    </label>
+
+                                    <button id="recommendSizeBtn"
+                                            type="button"
+                                            class="size-recommend-btn">
+                                        Gợi ý size
+                                    </button>
+                                </div>
+
+                                <div class="size-guide-table-wrap">
+                                    <table class="size-guide-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Size</th>
+                                                <th scope="col">Chiều cao</th>
+                                                <th scope="col">Cân nặng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var row in productSizeGuideRows)
+                                            {
+                                                <tr data-size="@row.Size"
+                                                    data-min-height="@row.Range.MinHeight"
+                                                    data-max-height="@row.Range.MaxHeight"
+                                                    data-min-weight="@row.Range.MinWeight"
+                                                    data-max-weight="@row.Range.MaxWeight">
+                                                    <th scope="row">@row.Size</th>
+                                                    <td>@row.Range.MinHeight – @row.Range.MaxHeight cm</td>
+                                                    <td>@row.Range.MinWeight – @row.Range.MaxWeight kg</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div id="sizeRecommendationResult"
+                                     class="size-recommend-result"
+                                     aria-live="polite">
+                                    <span id="recommendedSizeBadge"
+                                          class="recommended-size-badge"
+                                          hidden></span>
+                                    <p id="sizeRecommendationMessage">
+                                        Nhập chiều cao và cân nặng để nhận size phù hợp nhất.
+                                    </p>
+                                    <button id="applyRecommendedSizeBtn"
+                                            type="button"
+                                            class="size-apply-btn"
+                                            hidden>
+                                        Chọn size này
+                                    </button>
+                                </div>
+
+                                <p class="size-guide-note">
+                                    Bảng size mang tính tham khảo. Nếu bạn thích mặc rộng hoặc đang ở giữa hai size,
+                                    hãy ưu tiên size lớn hơn.
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="size-guide-unavailable">
+                                    Sản phẩm này dùng hệ size riêng. Vui lòng chọn một size đang hiển thị hoặc liên hệ
+                                    cửa hàng để được tư vấn chính xác.
+                                </p>
+                            }
+                        </div>
+                    </details>
 
                     <div class="detail-option-group">
                         <label>Chọn màu sắc</label>
@@ -291,21 +443,149 @@
             const mainImage = document.getElementById("mainProductImage");
             const colorRadios = document.querySelectorAll('input[name="selectedColor"]');
 
-            if (!mainImage || colorRadios.length === 0) return;
+            if (mainImage && colorRadios.length > 0) {
+                colorRadios.forEach(radio => {
+                    radio.addEventListener("change", function () {
+                        const newImage = this.dataset.image;
 
-            colorRadios.forEach(radio => {
-                radio.addEventListener("change", function () {
-                    const newImage = this.dataset.image;
+                        if (!newImage) return;
 
-                    if (!newImage) return;
+                        mainImage.classList.add("is-changing");
 
-                    mainImage.classList.add("is-changing");
-
-                    setTimeout(() => {
-                        mainImage.src = newImage;
-                        mainImage.classList.remove("is-changing");
-                    }, 120);
+                        setTimeout(() => {
+                            mainImage.src = newImage;
+                            mainImage.classList.remove("is-changing");
+                        }, 120);
+                    });
                 });
+            }
+
+            const heightInput = document.getElementById("customerHeight");
+            const weightInput = document.getElementById("customerWeight");
+            const recommendButton = document.getElementById("recommendSizeBtn");
+            const applyButton = document.getElementById("applyRecommendedSizeBtn");
+            const resultBox = document.getElementById("sizeRecommendationResult");
+            const resultMessage = document.getElementById("sizeRecommendationMessage");
+            const resultBadge = document.getElementById("recommendedSizeBadge");
+            const sizeRows = Array.from(document.querySelectorAll(".size-guide-table tbody tr"));
+
+            if (!heightInput || !weightInput || !recommendButton || sizeRows.length === 0) return;
+
+            function distanceToRange(value, min, max) {
+                if (value < min) return min - value;
+                if (value > max) return value - max;
+                return 0;
+            }
+
+            function clearRecommendation() {
+                sizeRows.forEach(row => row.classList.remove("is-recommended"));
+                resultBox?.classList.remove("is-error");
+                resultBadge?.setAttribute("hidden", "");
+                applyButton?.setAttribute("hidden", "");
+            }
+
+            function showInputError(message) {
+                clearRecommendation();
+                resultBox?.classList.add("is-error");
+
+                if (resultMessage) {
+                    resultMessage.textContent = message;
+                }
+            }
+
+            function recommendSize() {
+                const height = Number(heightInput.value);
+                const weight = Number(weightInput.value);
+
+                if (!heightInput.value || !weightInput.value) {
+                    showInputError("Vui lòng nhập đầy đủ chiều cao và cân nặng.");
+                    return;
+                }
+
+                if (!Number.isFinite(height) || height < 130 || height > 210) {
+                    showInputError("Chiều cao hợp lệ nằm trong khoảng 130–210 cm.");
+                    heightInput.focus();
+                    return;
+                }
+
+                if (!Number.isFinite(weight) || weight < 30 || weight > 150) {
+                    showInputError("Cân nặng hợp lệ nằm trong khoảng 30–150 kg.");
+                    weightInput.focus();
+                    return;
+                }
+
+                const candidates = sizeRows.map(row => {
+                    const minHeight = Number(row.dataset.minHeight);
+                    const maxHeight = Number(row.dataset.maxHeight);
+                    const minWeight = Number(row.dataset.minWeight);
+                    const maxWeight = Number(row.dataset.maxWeight);
+                    const heightCenter = (minHeight + maxHeight) / 2;
+                    const weightCenter = (minWeight + maxWeight) / 2;
+                    const score = distanceToRange(height, minHeight, maxHeight) * 1.15
+                        + distanceToRange(weight, minWeight, maxWeight) * 1.7
+                        + Math.abs(height - heightCenter) * 0.04
+                        + Math.abs(weight - weightCenter) * 0.07;
+
+                    return {
+                        row,
+                        size: row.dataset.size,
+                        score,
+                        isExact: height >= minHeight && height <= maxHeight
+                            && weight >= minWeight && weight <= maxWeight
+                    };
+                }).sort((first, second) => first.score - second.score);
+
+                const recommendation = candidates[0];
+                clearRecommendation();
+                recommendation.row.classList.add("is-recommended");
+
+                if (resultBadge) {
+                    resultBadge.textContent = recommendation.size;
+                    resultBadge.removeAttribute("hidden");
+                }
+
+                if (resultMessage) {
+                    resultMessage.textContent = recommendation.isExact
+                        ? `Size ${recommendation.size} phù hợp nhất với số đo bạn vừa nhập.`
+                        : `Size ${recommendation.size} là lựa chọn gần nhất trong các size hiện có của sản phẩm.`;
+                }
+
+                if (applyButton) {
+                    applyButton.dataset.recommendedSize = recommendation.size;
+                    applyButton.textContent = `Chọn size ${recommendation.size}`;
+                    applyButton.removeAttribute("hidden");
+                }
+            }
+
+            recommendButton.addEventListener("click", recommendSize);
+
+            [heightInput, weightInput].forEach(input => {
+                input.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        recommendSize();
+                    }
+                });
+            });
+
+            applyButton?.addEventListener("click", function () {
+                const recommendedSize = this.dataset.recommendedSize;
+                const targetSizeRadio = Array.from(
+                    document.querySelectorAll('input[name="selectedSize"]')
+                ).find(radio => radio.value === recommendedSize);
+
+                if (!targetSizeRadio) return;
+
+                targetSizeRadio.checked = true;
+                targetSizeRadio.dispatchEvent(new Event("change", { bubbles: true }));
+                targetSizeRadio.closest(".detail-option-group")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                if (resultMessage) {
+                    resultMessage.textContent = `Đã chọn size ${recommendedSize}. Bạn có thể thêm sản phẩm vào giỏ hàng.`;
+                }
             });
         });
     </script>
