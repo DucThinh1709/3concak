@@ -14,6 +14,39 @@ toggle?.addEventListener('click', () => {
   navbar?.classList.toggle('open');
 });
 
+const accountMenus = document.querySelectorAll('[data-account-menu]');
+
+function setAccountMenuState(menu, isOpen) {
+  const trigger = menu.querySelector('.account-menu-trigger');
+
+  menu.classList.toggle('open', isOpen);
+  trigger?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+accountMenus.forEach(menu => {
+  const trigger = menu.querySelector('.account-menu-trigger');
+
+  trigger?.addEventListener('click', event => {
+    event.stopPropagation();
+    setAccountMenuState(menu, !menu.classList.contains('open'));
+  });
+
+  menu.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+
+    setAccountMenuState(menu, false);
+    trigger?.focus();
+  });
+});
+
+document.addEventListener('click', event => {
+  accountMenus.forEach(menu => {
+    if (!menu.contains(event.target)) {
+      setAccountMenuState(menu, false);
+    }
+  });
+});
+
 function showToast() {
   toast?.classList.add('show');
   setTimeout(() => toast?.classList.remove('show'), 1800);

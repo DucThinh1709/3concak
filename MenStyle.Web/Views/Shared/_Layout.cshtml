@@ -206,17 +206,31 @@
                 <a class="cart-btn"
                    asp-controller="Cart"
                    asp-action="Index">
-                    Giỏ hàng <span id="cartCount">@cartQuantity</span>
+                    <svg class="cart-icon"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         aria-hidden="true">
+                        <path d="M3 4h2l2.15 9.02a2 2 0 0 0 1.95 1.53h7.72a2 2 0 0 0 1.95-1.56L20 7H6"
+                              stroke="currentColor"
+                              stroke-width="1.9"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                        <circle cx="9.5" cy="19" r="1.25" fill="currentColor" />
+                        <circle cx="17.5" cy="19" r="1.25" fill="currentColor" />
+                    </svg>
+                    Giỏ hàng
+                    <span id="cartCount" class="cart-count">@cartQuantity</span>
                 </a>
 
                 @if (currentUser is not null)
                 {
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <a class="nav-profile-link"
-                           asp-controller="Account"
-                           asp-action="Profile">
-
+                    <div class="account-menu" data-account-menu>
+                        <button id="accountMenuButton"
+                                class="account-menu-trigger nav-profile-link"
+                                type="button"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="accountDropdown">
                             <span class="nav-avatar">
                                 @if (!string.IsNullOrWhiteSpace(layoutAvatarUrl))
                                 {
@@ -228,45 +242,111 @@
                                 }
                             </span>
 
-                            <span class="nav-profile-text">
-                                Xin chào, @layoutDisplayName
+                            <span class="nav-profile-copy">
+                                <span class="account-greeting">Xin chào</span>
+                                <span class="nav-profile-text">@layoutDisplayName</span>
                             </span>
-                        </a>
-                    }
-                    else
-                    {
-                        <a class="nav-login-link"
-                           asp-controller="Account"
-                           asp-action="Login">
-                            Đăng nhập
-                        </a>
-                    }
 
-                    <a class="nav-pill"
-                       asp-controller="Account"
-                       asp-action="MyOrders">
-                        Đơn hàng
-                    </a>
-
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a class="nav-pill admin-entry-link"
-                           asp-controller="Admin"
-                           asp-action="Index">
-                            Quản trị
-                        </a>
-                    }
-
-                    <form class="logout-form"
-                          asp-controller="Account"
-                          asp-action="Logout"
-                          method="post">
-                        @Html.AntiForgeryToken()
-
-                        <button type="submit">
-                            Đăng xuất
+                            <svg class="account-chevron"
+                                 viewBox="0 0 20 20"
+                                 fill="none"
+                                 aria-hidden="true">
+                                <path d="m6 8 4 4 4-4"
+                                      stroke="currentColor"
+                                      stroke-width="1.8"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round" />
+                            </svg>
                         </button>
-                    </form>
+
+                        <div id="accountDropdown"
+                             class="account-dropdown"
+                             role="menu"
+                             aria-labelledby="accountMenuButton">
+                            <a class="account-menu-link"
+                               asp-controller="Account"
+                               asp-action="Profile"
+                               role="menuitem">
+                                <span class="account-menu-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="8" r="3.5"
+                                                stroke="currentColor" stroke-width="1.8" />
+                                        <path d="M5.5 20c.55-4.1 2.75-6.15 6.5-6.15S17.95 15.9 18.5 20"
+                                              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                                    </svg>
+                                </span>
+                                <span>
+                                    <strong>Thông tin cá nhân</strong>
+                                    <small>Xem và cập nhật tài khoản</small>
+                                </span>
+                            </a>
+
+                            <a class="account-menu-link"
+                               asp-controller="Account"
+                               asp-action="MyOrders"
+                               role="menuitem">
+                                <span class="account-menu-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M6 4h12v16H6z"
+                                              stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                                        <path d="M9 8h6M9 12h6M9 16h4"
+                                              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                                    </svg>
+                                </span>
+                                <span>
+                                    <strong>Đơn hàng</strong>
+                                    <small>Theo dõi lịch sử mua hàng</small>
+                                </span>
+                            </a>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a class="account-menu-link account-admin-link"
+                                   asp-controller="Admin"
+                                   asp-action="Index"
+                                   role="menuitem">
+                                    <span class="account-menu-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M12 3.5 14.1 5l2.55-.25.85 2.4 2.15 1.4-.85 2.35.85 2.35-2.15 1.4-.85 2.4-2.55-.25L12 18.5l-2.1-1.7-2.55.25-.85-2.4-2.15-1.4.85-2.35-.85-2.35 2.15-1.4.85-2.4L9.9 5 12 3.5Z"
+                                                  stroke="currentColor" stroke-width="1.55" stroke-linejoin="round" />
+                                            <circle cx="12" cy="10.9" r="2.7"
+                                                    stroke="currentColor" stroke-width="1.6" />
+                                        </svg>
+                                    </span>
+                                    <span>
+                                        <strong>Quản trị</strong>
+                                        <small>Quản lý cửa hàng MENSTYLE</small>
+                                    </span>
+                                </a>
+                            }
+
+                            <div class="account-menu-divider"></div>
+
+                            <form class="account-menu-logout"
+                                  asp-controller="Account"
+                                  asp-action="Logout"
+                                  method="post"
+                                  role="none">
+                                @Html.AntiForgeryToken()
+
+                                <button class="account-menu-link account-logout-link"
+                                        type="submit"
+                                        role="menuitem">
+                                    <span class="account-menu-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10"
+                                                  stroke="currentColor" stroke-width="1.8"
+                                                  stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </span>
+                                    <span>
+                                        <strong>Đăng xuất</strong>
+                                        <small>Thoát khỏi tài khoản hiện tại</small>
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 }
                 else
                 {

@@ -198,8 +198,7 @@ button,
 .cart-btn,
 .nav-profile-link,
 .nav-login-link,
-.nav-pill,
-.logout-form button {
+.nav-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -223,16 +222,234 @@ button,
 }
 
 .cart-btn {
-    min-width: 100px;
+    min-width: 136px;
+    gap: 9px;
+    border-color: #b77a24;
+    background: linear-gradient(135deg, #d29c4a 0%, #f0cf95 100%);
+    color: #111318;
+    box-shadow: 0 10px 24px rgba(169, 112, 24, 0.22);
 }
 
-.nav-profile-link {
-    max-width: 220px;
-    padding: 5px 17px 5px 5px;
+.cart-icon {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+}
+
+.nav-actions .nav-profile-link {
+    width: 238px;
+    max-width: 238px;
+    padding: 5px 12px 5px 5px;
+    gap: 10px;
+    text-align: left;
+}
+
+.nav-profile-copy {
+    display: grid;
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 3px;
+}
+
+.account-greeting {
+    color: #7a7064;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .nav-profile-text {
+    display: block;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     line-height: 1;
+    white-space: nowrap;
+}
+
+.account-chevron {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    transition: transform 0.18s ease;
+}
+
+.account-menu {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.account-menu::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    right: 0;
+    width: 100%;
+    height: 12px;
+}
+
+.account-menu-trigger {
+    appearance: none;
+}
+
+.account-dropdown {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 292px;
+    padding: 10px;
+    border: 1px solid #e2d5c4;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 24px 55px rgba(17, 19, 24, 0.18);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-7px) scale(0.98);
+    transform-origin: top right;
+    transition: opacity 0.18s ease, visibility 0.18s ease,
+        transform 0.18s ease;
+}
+
+.account-menu:hover .account-dropdown,
+.account-menu.open .account-dropdown {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.account-menu:hover .account-chevron,
+.account-menu.open .account-chevron {
+    transform: rotate(180deg);
+}
+
+.account-menu-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 60px;
+    padding: 9px 10px;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--button-dark);
+    text-align: left;
+    text-decoration: none;
+    transition: border-color 0.16s ease, background 0.16s ease,
+        color 0.16s ease, transform 0.16s ease;
+}
+
+.account-menu-link:hover,
+.account-menu-link:focus-visible {
+    border-color: #ead9c0;
+    background: #fff8ed;
+    color: var(--button-dark);
+    transform: translateX(2px);
+    outline: none;
+}
+
+.account-menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 12px;
+    background: #f3ede4;
+    color: #7e5a25;
+}
+
+.account-menu-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.account-menu-link > span:last-child {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+
+.account-menu-link strong,
+.account-menu-link small {
+    display: block;
+}
+
+.account-menu-link strong {
+    font-size: 14px;
+    line-height: 1.15;
+}
+
+.account-menu-link small {
+    color: #80766a;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.account-admin-link {
+    background: #fff8ec;
+}
+
+.account-admin-link .account-menu-icon {
+    background: #d29c4a;
+    color: #111318;
+}
+
+.account-menu-divider {
+    height: 1px;
+    margin: 7px 5px;
+    background: #eee4d7;
+}
+
+.account-menu-logout {
+    width: 100%;
+    margin: 0;
+}
+
+.nav-actions .account-menu-logout .account-menu-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 60px;
+    padding: 9px 10px;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: #a63232;
+    line-height: normal;
+    text-align: left;
+    white-space: normal;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: none;
+    transform: none;
+}
+
+.nav-actions .account-menu-logout .account-menu-link:hover,
+.nav-actions .account-menu-logout .account-menu-link:focus-visible {
+    border-color: #efcaca;
+    background: #fff5f5;
+    color: #a63232;
+    transform: translateX(2px);
+}
+
+.account-logout-link {
+    color: #a63232;
+}
+
+.account-logout-link .account-menu-icon {
+    background: #fff0f0;
+    color: #b23a3a;
 }
 
 .nav-login-link,
@@ -248,16 +465,9 @@ button,
     color: #111318;
 }
 
-.logout-form {
-    display: flex;
-    align-items: center;
-    margin: 0;
-}
-
 .cart-btn:hover,
 .nav-profile-link:hover,
-.nav-pill:hover,
-.logout-form button:hover {
+.nav-pill:hover {
     border-color: var(--button-accent);
     background: #fffaf2;
     color: var(--button-dark);
@@ -273,9 +483,26 @@ button,
     color: #111318;
 }
 
-.cart-btn span {
+.cart-btn:hover {
+    border-color: #8f5e18;
+    background: linear-gradient(135deg, #c58a31 0%, #e7bd77 100%);
+    box-shadow: 0 12px 28px rgba(169, 112, 24, 0.3);
+}
+
+.cart-btn .cart-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 25px;
+    height: 25px;
     flex: 0 0 auto;
-    margin-left: 8px;
+    margin-left: 1px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #111318;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 900;
 }
 
 /* Nút nhỏ trong bảng và giỏ hàng. */
@@ -457,10 +684,41 @@ button:disabled,
     }
 
     .navbar.open .nav-actions > a,
+    .navbar.open .nav-actions > .account-menu,
     .navbar.open .nav-actions > form,
     .navbar.open .nav-actions > form > button {
         width: 100%;
         max-width: none;
+    }
+
+    .navbar.open .account-menu::after {
+        display: none;
+    }
+
+    .navbar.open .account-menu-trigger {
+        width: 100%;
+        max-width: none;
+    }
+
+    .navbar.open .nav-profile-text {
+        display: block;
+        max-width: none;
+    }
+
+    .navbar.open .account-dropdown {
+        position: static;
+        display: none;
+        width: 100%;
+        margin-top: 8px;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: none;
+    }
+
+    .navbar.open .account-menu:hover .account-dropdown,
+    .navbar.open .account-menu.open .account-dropdown {
+        display: block;
     }
 }
 
