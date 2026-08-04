@@ -13,3 +13,7 @@ Khi chạy project, hãy chạy lần lượt các lệnh sau trên terminal
 - Chỉ tài khoản thuộc role `Admin` mới có quyền truy cập.
 - Sau khi admin đăng nhập, thanh điều hướng chỉ hiển thị một lối vào `Quản trị`.
 - Trang quản trị tập trung thống kê, quản lý sản phẩm và xử lý đơn hàng.
+
+Admin Account:
+email: admin@menstyle.web
+password: Admin@123
