@@ -1,0 +1,119 @@
+@model MenStyle.Web.ViewModels.CartViewModel
+
+@{
+    string FormatPrice(decimal price)
+    {
+        return $"{price:N0}đ".Replace(",", ".");
+    }
+
+    var visibleItems = Model.Items.Take(5).ToList();
+}
+
+<div class="mini-cart-content-inner">
+    <div class="mini-cart-summary-row">
+        <span>Tạm tính:</span>
+        <strong>@FormatPrice(Model.Total)</strong>
+        <small>(@Model.TotalQuantity sản phẩm)</small>
+
+        <a asp-controller="Cart" asp-action="Index">
+            Xem tất cả
+        </a>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="mini-cart-empty">
+            <span aria-hidden="true">🛍️</span>
+            <strong>Giỏ hàng đang trống</strong>
+            <p>Hãy chọn sản phẩm và thêm nhanh vào giỏ.</p>
+            <a class="btn btn-primary"
+               asp-controller="Home"
+               asp-action="SanPham">
+                Xem sản phẩm
+            </a>
+        </div>
+    }
+    else
+    {
+        @if (Model.HasStockIssues)
+        {
+            <div class="mini-cart-warning">
+                Có sản phẩm hết hàng hoặc vượt tồn kho. Vui lòng kiểm tra trước khi thanh toán.
+            </div>
+        }
+
+        <div class="mini-cart-items">
+            @foreach (var item in visibleItems)
+            {
+                <article class="mini-cart-item">
+                    <a class="mini-cart-item-image"
+                       asp-controller="Home"
+                       asp-action="ChiTietSanPham"
+                       asp-route-id="@item.ProductId">
+                        <img src="@item.ImageUrl" alt="@item.ProductName" />
+                    </a>
+
+                    <div class="mini-cart-item-copy">
+                        <a class="mini-cart-item-name"
+                           asp-controller="Home"
+                           asp-action="ChiTietSanPham"
+                           asp-route-id="@item.ProductId">
+                            @item.ProductName
+                        </a>
+
+                        <span>
+                            @(string.IsNullOrWhiteSpace(item.SelectedColor) ? "Không chọn màu" : item.SelectedColor)
+                            /
+                            @(string.IsNullOrWhiteSpace(item.SelectedSize) ? "Không chọn size" : item.SelectedSize)
+                        </span>
+
+                        <p>
+                            <strong>@FormatPrice(item.Price)</strong>
+                            <small>x@item.Quantity</small>
+                        </p>
+                    </div>
+
+                    <form asp-controller="Cart"
+                          asp-action="RemoveMiniCartItem"
+                          asp-route-id="@item.CartItemId"
+                          method="post"
+                          data-mini-cart-remove>
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                aria-label="Xóa @item.ProductName khỏi giỏ"
+                                title="Xóa sản phẩm">
+                            ×
+                        </button>
+                    </form>
+                </article>
+            }
+        </div>
+
+        @if (Model.Items.Count > visibleItems.Count)
+        {
+            <a class="mini-cart-more"
+               asp-controller="Cart"
+               asp-action="Index">
+                Và @(Model.Items.Count - visibleItems.Count) lựa chọn khác trong giỏ
+            </a>
+        }
+
+        <div class="mini-cart-actions">
+            <a class="btn btn-outline"
+               asp-controller="Cart"
+               asp-action="Index">
+                Xem giỏ hàng
+            </a>
+
+            @if (Model.CanCheckout)
+            {
+                <a class="btn btn-primary"
+                   asp-controller="Cart"
+                   asp-action="Checkout">
+                    Thanh toán
+                </a>
+            }
+        </div>
+    }
+</div>

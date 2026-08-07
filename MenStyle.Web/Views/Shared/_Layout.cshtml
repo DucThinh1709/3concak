@@ -57,6 +57,7 @@
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/button-system.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/commerce-enhancements.css" asp-append-version="true" />
 </head>
 
 <body>
@@ -203,24 +204,46 @@
             </div>
 
             <div class="nav-actions">
-                <a class="cart-btn"
-                   asp-controller="Cart"
-                   asp-action="Index">
-                    <svg class="cart-icon"
-                         viewBox="0 0 24 24"
-                         fill="none"
-                         aria-hidden="true">
-                        <path d="M3 4h2l2.15 9.02a2 2 0 0 0 1.95 1.53h7.72a2 2 0 0 0 1.95-1.56L20 7H6"
-                              stroke="currentColor"
-                              stroke-width="1.9"
-                              stroke-linecap="round"
-                              stroke-linejoin="round" />
-                        <circle cx="9.5" cy="19" r="1.25" fill="currentColor" />
-                        <circle cx="17.5" cy="19" r="1.25" fill="currentColor" />
-                    </svg>
-                    Giỏ hàng
-                    <span id="cartCount" class="cart-count">@cartQuantity</span>
-                </a>
+                <div class="mini-cart-host"
+                     data-mini-cart
+                     data-authenticated="@(currentUser is not null ? "true" : "false")"
+                     data-mini-cart-url="@Url.Action("MiniCart", "Cart")">
+                    <a class="cart-btn"
+                       asp-controller="Cart"
+                       asp-action="Index"
+                       data-mini-cart-trigger
+                       aria-haspopup="dialog"
+                       aria-expanded="false"
+                       aria-controls="miniCartPanel">
+                        <svg class="cart-icon"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             aria-hidden="true">
+                            <path d="M3 4h2l2.15 9.02a2 2 0 0 0 1.95 1.53h7.72a2 2 0 0 0 1.95-1.56L20 7H6"
+                                  stroke="currentColor"
+                                  stroke-width="1.9"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round" />
+                            <circle cx="9.5" cy="19" r="1.25" fill="currentColor" />
+                            <circle cx="17.5" cy="19" r="1.25" fill="currentColor" />
+                        </svg>
+                        Giỏ hàng
+                        <span id="cartCount" class="cart-count">@cartQuantity</span>
+                    </a>
+
+                    @if (currentUser is not null)
+                    {
+                        <div id="miniCartPanel"
+                             class="mini-cart-panel"
+                             data-mini-cart-panel
+                             role="dialog"
+                             aria-label="Giỏ hàng nhanh">
+                            <div class="mini-cart-loading" data-mini-cart-content>
+                                Đang tải giỏ hàng...
+                            </div>
+                        </div>
+                    }
+                </div>
 
                 @if (currentUser is not null)
                 {

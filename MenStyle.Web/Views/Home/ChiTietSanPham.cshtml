@@ -377,20 +377,24 @@
                         var relatedSalePercent = GetSalePercent(product.OldPrice, product.Price);
 
                         <article class="product-card">
-                            <a class="product-img product-img-sale"
-                               asp-controller="Home"
-                               asp-action="ChiTietSanPham"
-                               asp-route-id="@product.Id">
+                            <div class="product-card-media">
+                                <a class="product-img product-img-sale"
+                                   asp-controller="Home"
+                                   asp-action="ChiTietSanPham"
+                                   asp-route-id="@product.Id">
 
-                                @if (relatedSalePercent > 0)
-                                {
-                                    <span class="sale-badge">
-                                        -@relatedSalePercent%
-                                    </span>
-                                }
+                                    @if (relatedSalePercent > 0)
+                                    {
+                                        <span class="sale-badge">
+                                            -@relatedSalePercent%
+                                        </span>
+                                    }
 
-                                <img src="@product.ImageUrl" alt="@product.AltText" />
-                            </a>
+                                    <img src="@product.ImageUrl" alt="@product.AltText" />
+                                </a>
+
+                                <partial name="_QuickAddProduct" model="product" />
+                            </div>
 
                             <div class="product-info">
                                 <div class="product-tag-row">

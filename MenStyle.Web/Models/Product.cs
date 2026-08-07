@@ -40,24 +40,30 @@ public class Product
     public string AltText { get; set; } = string.Empty;
 
     [StringLength(1000)]
+    [Display(Name = "Mô tả sản phẩm")]
     public string Description { get; set; } = "Sản phẩm thời trang nam hiện đại, dễ phối đồ, phù hợp đi học, đi làm và đi chơi.";
 
     [StringLength(100)]
+    [Display(Name = "Chất liệu")]
     public string Material { get; set; } = "Cotton pha Polyester";
 
     [StringLength(100)]
+    [Display(Name = "Form dáng")]
     public string Fit { get; set; } = "Regular fit";
 
     [StringLength(100)]
+    [Display(Name = "Các size hiện có")]
     public string AvailableSizes { get; set; } = "S,M,L,XL";
 
     [StringLength(150)]
     public string AvailableColors { get; set; } = string.Empty; 
 
     [StringLength(500)]
+    [Display(Name = "Hướng dẫn bảo quản")]
     public string CareInstruction { get; set; } = "Giặt máy ở chế độ nhẹ, không dùng chất tẩy mạnh, ủi ở nhiệt độ thấp.";
 
-    [Range(0, int.MaxValue)]
+    [Range(0, int.MaxValue, ErrorMessage = "Tồn kho phải lớn hơn hoặc bằng 0")]
+    [Display(Name = "Số lượng tồn kho")]
     public int StockQuantity { get; set; } = 20;
 
     public bool IsActive { get; set; } = true;

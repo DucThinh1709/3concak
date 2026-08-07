@@ -20,5 +20,22 @@ public class CartItemViewModel
 
     public int Quantity { get; set; }
 
+    public int StockQuantity { get; set; }
+
+    public int TotalProductQuantityInCart { get; set; }
+
+    public bool IsProductActive { get; set; }
+
+    public bool HasStockIssue =>
+        !IsProductActive
+        || StockQuantity <= 0
+        || Quantity <= 0
+        || TotalProductQuantityInCart > StockQuantity;
+
+    public bool CanIncrease =>
+        IsProductActive
+        && StockQuantity > 0
+        && TotalProductQuantityInCart < StockQuantity;
+
     public decimal LineTotal => Price * Quantity;
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace MenStyle.Web.Controllers;
 
@@ -12,13 +13,16 @@ public class CartController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ILogger<CartController> _logger;
 
     public CartController(
         ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        ILogger<CartController> logger)
     {
         _context = context;
         _userManager = userManager;
+        _logger = logger;
     }
 
     [Authorize]
@@ -44,11 +48,12 @@ public class CartController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(
-    int id,
-    string? selectedSize = null,
-    string? selectedColor = null,
-    int quantity = 1,
-    string? returnUrl = null)
+        int id,
+        string? selectedSize = null,
+        string? selectedColor = null,
+        int quantity = 1,
+        string? returnUrl = null,
+        CancellationToken cancellationToken = default)
     {
         var user = await _userManager.GetUserAsync(User);
 
@@ -61,88 +66,25 @@ public class CartController : Controller
             return RedirectToAction("Login", "Account", new { returnUrl = safeReturnUrl });
         }
 
-        var product = await _context.Products
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+        var result = await AddToCartAsync(
+            user.Id,
+            id,
+            selectedSize,
+            selectedColor,
+            quantity,
+            cancellationToken);
 
-        if (product == null)
+        if (result.NotFound)
         {
             return NotFound();
         }
 
-        var sizes = SplitOptions(product.AvailableSizes);
-        var colors = SplitOptions(product.AvailableColors);
-
-        if (!colors.Any())
+        if (!result.Succeeded)
         {
-            colors = GenerateRandomColors(product.Id);
+            return RedirectAfterAddError(result.Message, id, returnUrl);
         }
 
-        var finalSize = string.IsNullOrWhiteSpace(selectedSize)
-            ? sizes.FirstOrDefault() ?? ""
-            : selectedSize.Trim();
-
-        var finalColor = string.IsNullOrWhiteSpace(selectedColor)
-            ? colors.FirstOrDefault() ?? ""
-            : selectedColor.Trim();
-
-        var selectedImageUrl = GetSelectedImageUrl(product, finalColor);
-
-        if (sizes.Any() && !sizes.Contains(finalSize))
-        {
-            ModelState.AddModelError(string.Empty, "Size không hợp lệ.");
-            return RedirectToAction("ChiTietSanPham", "Home", new { id });
-        }
-
-        if (colors.Any() && !colors.Contains(finalColor))
-        {
-            ModelState.AddModelError(string.Empty, "Màu sắc không hợp lệ.");
-            return RedirectToAction("ChiTietSanPham", "Home", new { id });
-        }
-
-        if (quantity < 1)
-        {
-            quantity = 1;
-        }
-
-        if (product.StockQuantity > 0 && quantity > product.StockQuantity)
-        {
-            quantity = product.StockQuantity;
-        }
-
-        var existingItem = await _context.ShoppingCartItems
-            .FirstOrDefaultAsync(x =>
-                x.UserId == user.Id
-                && x.ProductId == product.Id
-                && x.SelectedSize == finalSize
-                && x.SelectedColor == finalColor);
-
-        if (existingItem == null)
-        {
-            var cartItem = new ShoppingCartItem
-            {
-                UserId = user.Id,
-                ProductId = product.Id,
-                SelectedSize = finalSize,
-                SelectedColor = finalColor,
-                SelectedImageUrl = selectedImageUrl,
-                Quantity = quantity,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            };
-
-            _context.ShoppingCartItems.Add(cartItem);
-        }
-        else
-        {
-            existingItem.Quantity += quantity;
-            existingItem.SelectedImageUrl = selectedImageUrl;
-            existingItem.UpdatedAt = DateTime.Now;
-        }
-
-        await _context.SaveChangesAsync();
-
-        TempData["SuccessMessage"] = "Đã thêm sản phẩm vào giỏ hàng.";
+        TempData["SuccessMessage"] = result.Message;
 
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
@@ -150,6 +92,288 @@ public class CartController : Controller
         }
 
         return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddQuick(
+        int id,
+        string? selectedSize = null,
+        string? selectedColor = null,
+        int quantity = 1,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "Vui lòng đăng nhập để thêm sản phẩm vào giỏ.",
+                loginUrl = Url.Action("Login", "Account", new
+                {
+                    returnUrl = Url.Action("SanPham", "Home")
+                })
+            });
+        }
+
+        var result = await AddToCartAsync(
+            user.Id,
+            id,
+            selectedSize,
+            selectedColor,
+            quantity,
+            cancellationToken);
+
+        if (result.NotFound)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = result.Message
+            });
+        }
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = result.Message,
+                cartQuantity = result.CartQuantity
+            });
+        }
+
+        return Json(new
+        {
+            success = true,
+            message = result.Message,
+            cartQuantity = result.CartQuantity
+        });
+    }
+
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> MiniCart(
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        var items = await GetCartAsync(user.Id, cancellationToken);
+
+        return PartialView("_MiniCart", new CartViewModel
+        {
+            Items = items
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveMiniCartItem(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.GetUserAsync(User);
+
+        if (user == null)
+        {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "Phiên đăng nhập đã hết hạn."
+            });
+        }
+
+        var item = await _context.ShoppingCartItems
+            .FirstOrDefaultAsync(
+                x => x.UserId == user.Id && x.Id == id,
+                cancellationToken);
+
+        if (item == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Sản phẩm không còn trong giỏ hàng."
+            });
+        }
+
+        _context.ShoppingCartItems.Remove(item);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var cartQuantity = await _context.ShoppingCartItems
+            .Where(x => x.UserId == user.Id)
+            .SumAsync(x => (int?)x.Quantity, cancellationToken) ?? 0;
+
+        return Json(new
+        {
+            success = true,
+            message = "Đã xóa sản phẩm khỏi giỏ hàng.",
+            cartQuantity
+        });
+    }
+
+    private async Task<CartMutationResult> AddToCartAsync(
+        string userId,
+        int productId,
+        string? selectedSize,
+        string? selectedColor,
+        int quantity,
+        CancellationToken cancellationToken)
+    {
+        var cartQuantity = 0;
+
+        await using var transaction = await _context.Database
+            .BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+
+        try
+        {
+            var userCartItems = await _context.ShoppingCartItems
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.ProductId)
+                .ThenBy(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            cartQuantity = userCartItems.Sum(x => x.Quantity);
+
+            var product = await _context.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    p => p.Id == productId && p.IsActive,
+                    cancellationToken);
+
+            if (product == null)
+            {
+                return new CartMutationResult(
+                    false,
+                    "Sản phẩm không tồn tại hoặc đã ngừng bán.",
+                    cartQuantity,
+                    NotFound: true);
+            }
+
+            if (product.StockQuantity <= 0)
+            {
+                return new CartMutationResult(
+                    false,
+                    "Sản phẩm đã hết hàng và không thể thêm vào giỏ.",
+                    cartQuantity);
+            }
+
+            var sizes = SplitOptions(product.AvailableSizes);
+            var colors = SplitOptions(product.AvailableColors);
+
+            if (!colors.Any())
+            {
+                colors = GenerateRandomColors(product.Id);
+            }
+
+            var finalSize = string.IsNullOrWhiteSpace(selectedSize)
+                ? sizes.FirstOrDefault() ?? ""
+                : selectedSize.Trim();
+
+            var finalColor = string.IsNullOrWhiteSpace(selectedColor)
+                ? colors.FirstOrDefault() ?? ""
+                : selectedColor.Trim();
+
+            if (sizes.Any() && !sizes.Contains(finalSize))
+            {
+                return new CartMutationResult(
+                    false,
+                    "Size đã chọn không hợp lệ.",
+                    cartQuantity);
+            }
+
+            if (colors.Any() && !colors.Contains(finalColor))
+            {
+                return new CartMutationResult(
+                    false,
+                    "Màu sắc đã chọn không hợp lệ.",
+                    cartQuantity);
+            }
+
+            quantity = Math.Max(1, quantity);
+
+            var currentProductQuantity = userCartItems
+                .Where(x => x.ProductId == product.Id)
+                .Sum(x => x.Quantity);
+
+            var remainingQuantity = product.StockQuantity - currentProductQuantity;
+
+            if (remainingQuantity <= 0)
+            {
+                return new CartMutationResult(
+                    false,
+                    $"Bạn đã có đủ {product.StockQuantity} sản phẩm này trong giỏ, bằng với tồn kho hiện tại.",
+                    cartQuantity);
+            }
+
+            if (quantity > remainingQuantity)
+            {
+                return new CartMutationResult(
+                    false,
+                    $"Không thể thêm {quantity} sản phẩm. Bạn chỉ có thể thêm tối đa {remainingQuantity} sản phẩm nữa.",
+                    cartQuantity);
+            }
+
+            var existingItem = userCartItems.FirstOrDefault(x =>
+                x.ProductId == product.Id
+                && x.SelectedSize == finalSize
+                && x.SelectedColor == finalColor);
+
+            var selectedImageUrl = GetSelectedImageUrl(product, finalColor);
+
+            if (existingItem == null)
+            {
+                _context.ShoppingCartItems.Add(new ShoppingCartItem
+                {
+                    UserId = userId,
+                    ProductId = product.Id,
+                    SelectedSize = finalSize,
+                    SelectedColor = finalColor,
+                    SelectedImageUrl = selectedImageUrl,
+                    Quantity = quantity,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                });
+            }
+            else
+            {
+                existingItem.Quantity += quantity;
+                existingItem.SelectedImageUrl = selectedImageUrl;
+                existingItem.UpdatedAt = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return new CartMutationResult(
+                true,
+                "Đã thêm sản phẩm vào giỏ hàng.",
+                cartQuantity + quantity);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Không thể thêm product {ProductId} vào giỏ của user {UserId}.",
+                productId,
+                userId);
+
+            return new CartMutationResult(
+                false,
+                "Chưa thể cập nhật giỏ hàng. Vui lòng thử lại.",
+                cartQuantity);
+        }
     }
 
     private static List<string> SplitOptions(string? value)
@@ -195,7 +419,9 @@ public class CartController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Increase(int id)
+    public async Task<IActionResult> Increase(
+        int id,
+        CancellationToken cancellationToken = default)
     {
         var user = await _userManager.GetUserAsync(User);
 
@@ -204,18 +430,75 @@ public class CartController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        var item = await _context.ShoppingCartItems
-            .FirstOrDefaultAsync(x => x.UserId == user.Id && x.Id == id);
+        await using var transaction = await _context.Database
+            .BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
-        if (item != null)
+        try
         {
+            var userCartItems = await _context.ShoppingCartItems
+                .Where(x => x.UserId == user.Id)
+                .OrderBy(x => x.ProductId)
+                .ThenBy(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            var item = userCartItems.FirstOrDefault(x => x.Id == id);
+
+            if (item == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var product = await _context.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == item.ProductId, cancellationToken);
+
+            if (product == null || !product.IsActive)
+            {
+                TempData["ErrorMessage"] = "Sản phẩm không còn được bán nên không thể tăng số lượng.";
+                return RedirectToAction("Index");
+            }
+
+            var currentProductQuantity = userCartItems
+                .Where(x => x.ProductId == item.ProductId)
+                .Sum(x => x.Quantity);
+
+            if (product.StockQuantity <= 0)
+            {
+                TempData["ErrorMessage"] = $"{product.Name} đã hết hàng.";
+                return RedirectToAction("Index");
+            }
+
+            if (currentProductQuantity >= product.StockQuantity)
+            {
+                TempData["ErrorMessage"] =
+                    $"Không thể tăng thêm. {product.Name} chỉ còn {product.StockQuantity} sản phẩm.";
+
+                return RedirectToAction("Index");
+            }
+
             item.Quantity++;
             item.UpdatedAt = DateTime.Now;
 
-            await _context.SaveChangesAsync();
-        }
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
 
-        return RedirectToAction("Index");
+            return RedirectToAction("Index");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                exception,
+                "Không thể tăng cart item {CartItemId} của user {UserId}.",
+                id,
+                user.Id);
+
+            TempData["ErrorMessage"] = "Chưa thể cập nhật giỏ hàng. Vui lòng thử lại.";
+            return RedirectToAction("Index");
+        }
     }
 
     [Authorize]
@@ -322,6 +605,14 @@ public class CartController : Controller
             return RedirectToAction("Index");
         }
 
+        var stockError = GetCartStockError(cart);
+
+        if (stockError != null)
+        {
+            TempData["ErrorMessage"] = stockError;
+            return RedirectToAction("Index");
+        }
+
         var model = new CheckoutViewModel
         {
             Items = cart,
@@ -340,7 +631,9 @@ public class CartController : Controller
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Checkout(CheckoutViewModel model)
+    public async Task<IActionResult> Checkout(
+        CheckoutViewModel model,
+        CancellationToken cancellationToken)
     {
         var user = await _userManager.GetUserAsync(User);
 
@@ -358,6 +651,14 @@ public class CartController : Controller
         }
 
         model.Items = cart;
+
+        var stockError = GetCartStockError(cart);
+
+        if (stockError != null)
+        {
+            TempData["ErrorMessage"] = stockError;
+            return RedirectToAction("Index");
+        }
 
         if (model.NoNote)
         {
@@ -398,48 +699,124 @@ public class CartController : Controller
             ? "Chờ thanh toán"
             : "Chưa thanh toán";
 
-        var order = new CustomerOrder
+        await using var transaction = await _context.Database
+            .BeginTransactionAsync(cancellationToken);
+
+        try
         {
-            OrderCode = string.IsNullOrWhiteSpace(model.OrderCode)
-                ? GenerateOrderCode()
-                : model.OrderCode,
+            var cartItems = await _context.ShoppingCartItems
+                .Include(x => x.Product)
+                .Where(x => x.UserId == user.Id)
+                .OrderBy(x => x.ProductId)
+                .ThenBy(x => x.Id)
+                .ToListAsync(cancellationToken);
 
-            UserId = user.Id,
-            CustomerName = model.CustomerName.Trim(),
-            PhoneNumber = model.PhoneNumber.Trim(),
-            ShippingAddress = model.ShippingAddress.Trim(),
-            ShippingLatitude = model.ShippingLatitude,
-            ShippingLongitude = model.ShippingLongitude,
-            PaymentMethod = model.PaymentMethod,
-            PaymentStatus = paymentStatus,
-            Note = model.NoNote ? "" : model.Note?.Trim() ?? "",
-            Status = "Chờ xác nhận",
-            CreatedAt = DateTime.Now,
-            TotalAmount = cart.Sum(x => x.LineTotal),
-
-            Items = cart.Select(x => new CustomerOrderItem
+            if (!cartItems.Any())
             {
-                ProductId = x.ProductId,
-                ProductName = x.ProductName,
-                SelectedSize = x.SelectedSize,
-                SelectedColor = x.SelectedColor,
-                SelectedImageUrl = x.ImageUrl,
-                Price = x.Price,
-                Quantity = x.Quantity,
-                LineTotal = x.LineTotal
-            }).ToList()
-        };
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["ErrorMessage"] = "Giỏ hàng đang trống, chưa thể đặt hàng.";
+                return RedirectToAction("Index");
+            }
 
-        var cartItems = await _context.ShoppingCartItems
-            .Where(x => x.UserId == user.Id)
-            .ToListAsync();
+            foreach (var productGroup in cartItems.GroupBy(x => x.ProductId))
+            {
+                var firstItem = productGroup.First();
+                var product = firstItem.Product;
+                var requestedQuantity = productGroup.Sum(x => x.Quantity);
 
-        _context.CustomerOrders.Add(order);
-        _context.ShoppingCartItems.RemoveRange(cartItems);
+                if (product == null || !product.IsActive || requestedQuantity <= 0)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    TempData["ErrorMessage"] =
+                        "Một sản phẩm trong giỏ không còn hợp lệ. Vui lòng kiểm tra lại giỏ hàng.";
 
-        await _context.SaveChangesAsync();
+                    return RedirectToAction("Index");
+                }
 
-        return RedirectToAction("OrderSuccess", new { id = order.Id });
+                var affectedRows = await _context.Products
+                    .Where(p => p.Id == product.Id
+                                && p.IsActive
+                                && p.StockQuantity >= requestedQuantity)
+                    .ExecuteUpdateAsync(
+                        setters => setters.SetProperty(
+                            p => p.StockQuantity,
+                            p => p.StockQuantity - requestedQuantity),
+                        cancellationToken);
+
+                if (affectedRows != 1)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    TempData["ErrorMessage"] =
+                        $"{product.Name} vừa thay đổi tồn kho và không còn đủ số lượng. Đơn hàng chưa được tạo.";
+
+                    return RedirectToAction("Index");
+                }
+            }
+
+            var orderItems = cartItems.Select(x =>
+            {
+                var product = x.Product!;
+                var imageUrl = string.IsNullOrWhiteSpace(x.SelectedImageUrl)
+                    ? product.ImageUrl
+                    : x.SelectedImageUrl;
+
+                return new CustomerOrderItem
+                {
+                    ProductId = x.ProductId,
+                    ProductName = product.Name,
+                    SelectedSize = x.SelectedSize,
+                    SelectedColor = x.SelectedColor,
+                    SelectedImageUrl = imageUrl,
+                    Price = product.Price,
+                    Quantity = x.Quantity,
+                    LineTotal = product.Price * x.Quantity
+                };
+            }).ToList();
+
+            var order = new CustomerOrder
+            {
+                OrderCode = GenerateOrderCode(),
+                UserId = user.Id,
+                CustomerName = model.CustomerName.Trim(),
+                PhoneNumber = model.PhoneNumber.Trim(),
+                ShippingAddress = model.ShippingAddress.Trim(),
+                ShippingLatitude = model.ShippingLatitude,
+                ShippingLongitude = model.ShippingLongitude,
+                PaymentMethod = model.PaymentMethod,
+                PaymentStatus = paymentStatus,
+                Note = model.NoNote ? "" : model.Note?.Trim() ?? "",
+                Status = "Chờ xác nhận",
+                CreatedAt = DateTime.Now,
+                TotalAmount = orderItems.Sum(x => x.LineTotal),
+                Items = orderItems
+            };
+
+            _context.CustomerOrders.Add(order);
+            _context.ShoppingCartItems.RemoveRange(cartItems);
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return RedirectToAction("OrderSuccess", new { id = order.Id });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+
+            _logger.LogError(
+                exception,
+                "Đặt hàng thất bại và đã hoàn tác tồn kho cho user {UserId}.",
+                user.Id);
+
+            TempData["ErrorMessage"] =
+                "Chưa thể tạo đơn hàng. Tồn kho và giỏ hàng không bị thay đổi, vui lòng thử lại.";
+
+            return RedirectToAction("Index");
+        }
     }
 
     [Authorize]
@@ -465,12 +842,25 @@ public class CartController : Controller
         return View(order);
     }
 
-    private async Task<List<CartItemViewModel>> GetCartAsync(string userId)
+    private async Task<List<CartItemViewModel>> GetCartAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
     {
-        return await _context.ShoppingCartItems
+        var cartItems = await _context.ShoppingCartItems
+            .AsNoTracking()
             .Include(x => x.Product)
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        var productTotals = cartItems
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(x => x.Quantity));
+
+        return cartItems
+            .Where(x => x.Product != null)
             .Select(x => new CartItemViewModel
             {
                 CartItemId = x.Id,
@@ -483,9 +873,53 @@ public class CartController : Controller
                 SelectedSize = x.SelectedSize,
                 SelectedColor = x.SelectedColor,
                 Price = x.Product.Price,
-                Quantity = x.Quantity
+                Quantity = x.Quantity,
+                StockQuantity = x.Product.StockQuantity,
+                TotalProductQuantityInCart = productTotals[x.ProductId],
+                IsProductActive = x.Product.IsActive
             })
-            .ToListAsync();
+            .ToList();
+    }
+
+    private IActionResult RedirectAfterAddError(
+        string message,
+        int productId,
+        string? returnUrl)
+    {
+        TempData["ErrorMessage"] = message;
+
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToAction("ChiTietSanPham", "Home", new { id = productId });
+    }
+
+    private static string? GetCartStockError(IEnumerable<CartItemViewModel> cart)
+    {
+        foreach (var productGroup in cart.GroupBy(x => x.ProductId))
+        {
+            var firstItem = productGroup.First();
+            var requestedQuantity = productGroup.Sum(x => x.Quantity);
+
+            if (!firstItem.IsProductActive)
+            {
+                return $"{firstItem.ProductName} không còn được bán. Vui lòng xóa sản phẩm khỏi giỏ.";
+            }
+
+            if (firstItem.StockQuantity <= 0)
+            {
+                return $"{firstItem.ProductName} đã hết hàng. Vui lòng xóa sản phẩm khỏi giỏ.";
+            }
+
+            if (requestedQuantity > firstItem.StockQuantity)
+            {
+                return $"{firstItem.ProductName} chỉ còn {firstItem.StockQuantity} sản phẩm, nhưng giỏ đang có {requestedQuantity}. Vui lòng giảm số lượng.";
+            }
+        }
+
+        return null;
     }
 
     private static Dictionary<string, string> ParseColorImageMap(string? value)
@@ -530,6 +964,12 @@ public class CartController : Controller
 
     private string GenerateOrderCode()
     {
-        return "MS" + DateTime.Now.ToString("yyyyMMddHHmmss");
+        return "MS" + DateTime.Now.ToString("yyyyMMddHHmmssfff");
     }
+
+    private sealed record CartMutationResult(
+        bool Succeeded,
+        string Message,
+        int CartQuantity = 0,
+        bool NotFound = false);
 }

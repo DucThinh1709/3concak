@@ -51,6 +51,13 @@
         }
         else
         {
+            @if (Model.HasStockIssues)
+            {
+                <div class="flash-message error">
+                    Giỏ hàng có sản phẩm hết hàng, ngừng bán hoặc vượt tồn kho. Vui lòng điều chỉnh trước khi thanh toán.
+                </div>
+            }
+
             <div class="cart-layout">
                 <div class="cart-card">
                     <div class="cart-table">
@@ -81,6 +88,25 @@
                                         <strong class="cart-item-price">
                                             @FormatPrice(item.Price)
                                         </strong>
+
+                                        @if (!item.IsProductActive)
+                                        {
+                                            <small class="text-danger">Sản phẩm đã ngừng bán</small>
+                                        }
+                                        else if (item.StockQuantity <= 0)
+                                        {
+                                            <small class="text-danger">Sản phẩm đã hết hàng</small>
+                                        }
+                                        else if (item.TotalProductQuantityInCart > item.StockQuantity)
+                                        {
+                                            <small class="text-danger">
+                                                Giỏ đang có @item.TotalProductQuantityInCart, tồn kho chỉ còn @item.StockQuantity
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small>Còn @item.StockQuantity sản phẩm</small>
+                                        }
                                     </div>
                                 </div>
 
@@ -104,7 +130,10 @@
                                           method="post">
                                         @Html.AntiForgeryToken()
 
-                                        <button type="submit" aria-label="Tăng số lượng">
+                                        <button type="submit"
+                                                aria-label="Tăng số lượng"
+                                                disabled="@(!item.CanIncrease)"
+                                                title="@(item.CanIncrease ? "Tăng số lượng" : "Đã đạt giới hạn tồn kho")">
                                             +
                                         </button>
                                     </form>
@@ -152,11 +181,22 @@
                         <strong>@FormatPrice(Model.Total)</strong>
                     </div>
 
-                    <a class="btn btn-primary full"
-                       asp-controller="Cart"
-                       asp-action="Checkout">
-                        Tiến hành thanh toán
-                    </a>
+                    @if (Model.CanCheckout)
+                    {
+                        <a class="btn btn-primary full"
+                           asp-controller="Cart"
+                           asp-action="Checkout">
+                            Tiến hành thanh toán
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary full"
+                                type="button"
+                                disabled>
+                            Vui lòng điều chỉnh tồn kho
+                        </button>
+                    }
 
                     <form asp-controller="Cart"
                           asp-action="Clear"

@@ -1,5 +1,6 @@
 ﻿using MenStyle.Web.Data;
 using MenStyle.Web.Models;
+using MenStyle.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDistributedMemoryCache();
+
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection(EmailSettings.SectionName));
+
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+builder.Services.AddSingleton<IPasswordResetOtpService, PasswordResetOtpService>();
 
 builder.Services.AddSession(options =>
 {
@@ -33,6 +40,11 @@ builder.Services
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromMinutes(15);
+});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

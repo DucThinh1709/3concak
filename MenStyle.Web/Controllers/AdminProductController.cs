@@ -67,6 +67,7 @@ public class AdminProductsController : Controller
 
         ModelState.Remove(nameof(Product.ProductTags));
         model.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
+        NormalizeProductDetails(model);
 
         if (!ModelState.IsValid)
         {
@@ -138,6 +139,7 @@ public class AdminProductsController : Controller
 
         ModelState.Remove(nameof(Product.ProductTags));
         model.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
+        NormalizeProductDetails(model);
 
         if (!ModelState.IsValid)
         {
@@ -162,6 +164,12 @@ public class AdminProductsController : Controller
         product.AltText = model.AltText?.Trim() ?? "";
         product.ColorImageMap = model.ColorImageMap?.Trim() ?? "";
         product.AvailableColors = model.AvailableColors?.Trim() ?? "";
+        product.Description = model.Description;
+        product.Material = model.Material;
+        product.Fit = model.Fit;
+        product.AvailableSizes = model.AvailableSizes;
+        product.CareInstruction = model.CareInstruction;
+        product.StockQuantity = model.StockQuantity;
         product.ProductTags = NormalizeProductTags(model.ProductTags, model.CategorySlug);
         product.IsActive = model.IsActive;
 
@@ -260,6 +268,27 @@ public class AdminProductsController : Controller
             value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                  .Where(tag => tag != mainSlug)
                  .Distinct());
+    }
+
+    private static void NormalizeProductDetails(Product product)
+    {
+        product.Description = product.Description?.Trim() ?? "";
+        product.Material = product.Material?.Trim() ?? "";
+        product.Fit = product.Fit?.Trim() ?? "";
+        product.AvailableSizes = NormalizeCommaSeparatedValues(product.AvailableSizes);
+        product.CareInstruction = product.CareInstruction?.Trim() ?? "";
+    }
+
+    private static string NormalizeCommaSeparatedValues(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        return string.Join(",",
+            value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                 .Distinct(StringComparer.OrdinalIgnoreCase));
     }
 
     private static List<string> GenerateRandomColors(int seed)

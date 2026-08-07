@@ -1,0 +1,153 @@
+@model MenStyle.Web.ViewModels.VerifyOtpViewModel
+
+@{
+    ViewData["Title"] = "Xác minh OTP";
+}
+
+<section class="auth-page">
+    <div class="auth-shell forgot-shell">
+        <div class="auth-visual">
+            <a class="auth-logo" asp-controller="Home" asp-action="Index">
+                MEN<span>STYLE</span>
+            </a>
+
+            <div class="auth-visual-content">
+                <p class="eyebrow">Email Verification</p>
+                <h1>Xác minh mã OTP</h1>
+                <p>
+                    Mã xác minh gồm 6 chữ số, có hiệu lực trong 5 phút và chỉ sử dụng một lần.
+                </p>
+            </div>
+        </div>
+
+        <div class="auth-panel">
+            <div class="auth-header">
+                <p>Bảo mật tài khoản</p>
+                <h2>Nhập mã OTP</h2>
+                <span>
+                    Mã đã được gửi tới <strong>@Model.MaskedEmail</strong>.
+                </span>
+            </div>
+
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="flash-message success">@successMessage</div>
+            }
+
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="flash-message error">@errorMessage</div>
+            }
+
+            <form asp-action="VerifyOtp"
+                  asp-controller="Account"
+                  method="post"
+                  class="auth-form"
+                  id="otpVerifyForm">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger validation-box"></div>
+
+                <input asp-for="RequestId" type="hidden" />
+
+                <div class="form-group">
+                    <label asp-for="OtpCode"></label>
+
+                    <div class="input-icon">
+                        <span>🔐</span>
+                        <input asp-for="OtpCode"
+                               id="otpCodeInput"
+                               class="form-control"
+                               inputmode="numeric"
+                               autocomplete="one-time-code"
+                               maxlength="6"
+                               pattern="[0-9]{6}"
+                               placeholder="Nhập 6 chữ số"
+                               autofocus />
+                    </div>
+
+                    <span asp-validation-for="OtpCode" class="text-danger"></span>
+                </div>
+
+                <div class="validation-box" style="margin-bottom:16px;">
+                    <span id="otpCountdown"
+                          data-seconds="@Model.RemainingSeconds">
+                        Đang kiểm tra thời gian còn lại...
+                    </span>
+
+                    <br />
+
+                    <small>
+                        Số lần nhập còn lại: <strong>@Model.RemainingAttempts</strong>
+                    </small>
+                </div>
+
+                <button type="submit" class="btn-auth">
+                    Xác minh OTP
+                </button>
+            </form>
+
+            <form asp-action="ResendOtp"
+                  asp-controller="Account"
+                  method="post"
+                  class="auth-form"
+                  style="margin-top:12px;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="requestId" value="@Model.RequestId" />
+
+                <button type="submit" class="btn btn-outline full">
+                    Gửi lại mã OTP
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <span>Thông tin chưa đúng?</span>
+                <a asp-controller="Account" asp-action="ForgotPassword">Nhập lại email hoặc số điện thoại</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const otpInput = document.getElementById("otpCodeInput");
+            const countdown = document.getElementById("otpCountdown");
+
+            if (otpInput) {
+                otpInput.addEventListener("input", function () {
+                    this.value = this.value.replace(/\D/g, "").slice(0, 6);
+                });
+            }
+
+            if (!countdown) return;
+
+            let remainingSeconds = Number(countdown.dataset.seconds || "0");
+
+            function renderCountdown() {
+                if (!Number.isFinite(remainingSeconds) || remainingSeconds <= 0) {
+                    countdown.textContent = "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.";
+                    countdown.classList.add("text-danger");
+                    return false;
+                }
+
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = String(remainingSeconds % 60).padStart(2, "0");
+
+                countdown.textContent = `Mã OTP còn hiệu lực: ${minutes}:${seconds}`;
+                return true;
+            }
+
+            renderCountdown();
+            const timer = window.setInterval(function () {
+                remainingSeconds--;
+
+                if (!renderCountdown()) {
+                    window.clearInterval(timer);
+                }
+            }, 1000);
+        });
+    </script>
+}

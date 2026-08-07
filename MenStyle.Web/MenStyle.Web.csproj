@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MenStyle.Web</RootNamespace>
+    <UserSecretsId>e8b9259d-7ae2-4587-a007-10566294fa3d</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

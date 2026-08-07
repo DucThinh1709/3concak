@@ -12,6 +12,9 @@ public class ResetPasswordViewModel
 
     [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
     [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
+    [RegularExpression(
+        @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,100}$",
+        ErrorMessage = "Mật khẩu phải có chữ hoa, chữ thường, chữ số và ký tự đặc biệt")]
     [DataType(DataType.Password)]
     [Display(Name = "Mật khẩu mới")]
     public string NewPassword { get; set; } = string.Empty;

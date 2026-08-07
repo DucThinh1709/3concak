@@ -1,5 +1,6 @@
 using MenStyle.Web.Data;
 using MenStyle.Web.Models;
+using MenStyle.Web.Services;
 using MenStyle.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,15 +16,18 @@ namespace MenStyle.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IPasswordResetOtpService _otpService;
 
         public AccountController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IPasswordResetOtpService otpService)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
+            _otpService = otpService;
         }
 
         [HttpGet]
@@ -347,6 +351,7 @@ namespace MenStyle.Web.Controllers
                 .Replace(")", "")
                 .Trim();
         }
+
         [HttpGet]
         public IActionResult ForgotPassword()
         {
@@ -355,39 +360,192 @@ namespace MenStyle.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        public async Task<IActionResult> ForgotPassword(
+            ForgotPasswordViewModel model,
+            CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var user = await _userManager.FindByEmailAsync(model.LoginIdentifier);
+            var loginIdentifier = model.LoginIdentifier.Trim();
+            ApplicationUser? user;
 
-            if (user == null)
+            if (loginIdentifier.Contains('@'))
             {
-                user = _userManager.Users
-                    .FirstOrDefault(u => u.PhoneNumber == model.LoginIdentifier);
+                user = await _userManager.FindByEmailAsync(loginIdentifier);
+            }
+            else
+            {
+                var normalizedPhone = NormalizePhoneNumber(loginIdentifier);
+
+                user = await _context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == normalizedPhone, cancellationToken);
             }
 
-            if (user == null)
+            if (user == null || string.IsNullOrWhiteSpace(user.Email))
             {
-                TempData["ErrorMessage"] = "Không tìm thấy tài khoản phù hợp.";
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Không thể gửi mã OTP. Vui lòng kiểm tra lại email hoặc số điện thoại đã đăng ký.");
+
                 return View(model);
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var sendResult = await _otpService.CreateOrResendAsync(
+                user.Id,
+                user.Email,
+                user.FullName,
+                cancellationToken);
 
-            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-            return RedirectToAction("ResetPassword", new
+            if (!sendResult.Succeeded)
             {
-                userId = user.Id,
-                token = encodedToken
+                if (sendResult.RequestId != Guid.Empty)
+                {
+                    TempData["ErrorMessage"] = sendResult.Message;
+
+                    return RedirectToAction(nameof(VerifyOtp), new
+                    {
+                        requestId = sendResult.RequestId
+                    });
+                }
+
+                ModelState.AddModelError(string.Empty, sendResult.Message);
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = sendResult.Message;
+
+            return RedirectToAction(nameof(VerifyOtp), new
+            {
+                requestId = sendResult.RequestId
             });
         }
 
         [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> VerifyOtp(
+            Guid requestId,
+            CancellationToken cancellationToken)
+        {
+            if (requestId == Guid.Empty)
+            {
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var requestInfo = await _otpService.GetInfoAsync(requestId, cancellationToken);
+
+            if (requestInfo == null)
+            {
+                TempData["ErrorMessage"] =
+                    "Yêu cầu OTP không tồn tại hoặc đã hết hiệu lực. Vui lòng yêu cầu mã mới.";
+
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            return View(new VerifyOtpViewModel
+            {
+                RequestId = requestId,
+                MaskedEmail = requestInfo.MaskedEmail,
+                RemainingSeconds = requestInfo.RemainingSeconds,
+                RemainingAttempts = requestInfo.RemainingAttempts
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyOtp(
+            VerifyOtpViewModel model,
+            CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                await PopulateOtpViewModelAsync(model, cancellationToken);
+                return View(model);
+            }
+
+            var verifyResult = await _otpService.VerifyAsync(
+                model.RequestId,
+                model.OtpCode,
+                cancellationToken);
+
+            if (verifyResult.Status == OtpVerifyStatus.Succeeded)
+            {
+                var user = await _userManager.FindByIdAsync(verifyResult.UserId);
+
+                if (user == null)
+                {
+                    _otpService.InvalidateForUser(verifyResult.UserId);
+                    TempData["ErrorMessage"] = "Không tìm thấy tài khoản cần đặt lại mật khẩu.";
+                    return RedirectToAction(nameof(ForgotPassword));
+                }
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+                TempData["SuccessMessage"] =
+                    "Xác minh OTP thành công. Vui lòng tạo mật khẩu mới.";
+
+                return RedirectToAction(nameof(ResetPassword), new
+                {
+                    userId = user.Id,
+                    token = encodedToken
+                });
+            }
+
+            var errorMessage = verifyResult.Status switch
+            {
+                OtpVerifyStatus.Expired =>
+                    "Mã OTP đã hết hạn. Vui lòng bấm Gửi lại mã OTP.",
+
+                OtpVerifyStatus.InvalidCode =>
+                    $"Mã OTP không đúng. Bạn còn {verifyResult.RemainingAttempts} lần nhập.",
+
+                OtpVerifyStatus.TooManyAttempts =>
+                    "Bạn đã nhập sai quá số lần cho phép. Vui lòng gửi lại mã OTP mới.",
+
+                OtpVerifyStatus.AlreadyUsed =>
+                    "Mã OTP này đã được sử dụng. Vui lòng tạo yêu cầu mới nếu cần.",
+
+                _ =>
+                    "Yêu cầu OTP không tồn tại hoặc đã hết hiệu lực. Vui lòng yêu cầu mã mới."
+            };
+
+            ModelState.AddModelError(nameof(model.OtpCode), errorMessage);
+            await PopulateOtpViewModelAsync(model, cancellationToken);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendOtp(
+            Guid requestId,
+            CancellationToken cancellationToken)
+        {
+            if (requestId == Guid.Empty)
+            {
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var sendResult = await _otpService.ResendAsync(requestId, cancellationToken);
+
+            if (sendResult.Succeeded)
+            {
+                TempData["SuccessMessage"] = sendResult.Message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = sendResult.Message;
+            }
+
+            return RedirectToAction(nameof(VerifyOtp), new { requestId });
+        }
+
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public IActionResult ResetPassword(string userId, string token)
         {
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
@@ -421,12 +579,28 @@ namespace MenStyle.Web.Controllers
                 return RedirectToAction("Login");
             }
 
-            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+            string decodedToken;
+
+            try
+            {
+                decodedToken = Encoding.UTF8.GetString(
+                    WebEncoders.Base64UrlDecode(model.Token));
+            }
+            catch (Exception exception) when (
+                exception is FormatException or ArgumentException)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
+
+                return View(model);
+            }
 
             var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
 
             if (result.Succeeded)
             {
+                _otpService.InvalidateForUser(user.Id);
                 TempData["SuccessMessage"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
                 return RedirectToAction("Login");
             }
@@ -437,6 +611,27 @@ namespace MenStyle.Web.Controllers
             }
 
             return View(model);
+        }
+
+        private async Task PopulateOtpViewModelAsync(
+            VerifyOtpViewModel model,
+            CancellationToken cancellationToken)
+        {
+            var requestInfo = await _otpService.GetInfoAsync(
+                model.RequestId,
+                cancellationToken);
+
+            if (requestInfo == null)
+            {
+                model.MaskedEmail = "email đã đăng ký";
+                model.RemainingSeconds = 0;
+                model.RemainingAttempts = 0;
+                return;
+            }
+
+            model.MaskedEmail = requestInfo.MaskedEmail;
+            model.RemainingSeconds = requestInfo.RemainingSeconds;
+            model.RemainingAttempts = requestInfo.RemainingAttempts;
         }
     }
 }

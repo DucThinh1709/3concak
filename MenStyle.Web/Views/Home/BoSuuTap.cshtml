@@ -230,18 +230,22 @@
                         var salePercent = GetSalePercent(product.OldPrice, product.Price);
 
                         <article class="collection-v2-product-card">
-                            <a class="collection-v2-product-image"
-                               asp-controller="Home"
-                               asp-action="ChiTietSanPham"
-                               asp-route-id="@product.Id">
+                            <div class="product-card-media">
+                                <a class="collection-v2-product-image"
+                                   asp-controller="Home"
+                                   asp-action="ChiTietSanPham"
+                                   asp-route-id="@product.Id">
 
-                                @if (salePercent > 0)
-                                {
-                                    <span>-@salePercent%</span>
-                                }
+                                    @if (salePercent > 0)
+                                    {
+                                        <span>-@salePercent%</span>
+                                    }
 
-                                <img src="@product.ImageUrl" alt="@product.AltText" />
-                            </a>
+                                    <img src="@product.ImageUrl" alt="@product.AltText" />
+                                </a>
+
+                                <partial name="_QuickAddProduct" model="product" />
+                            </div>
 
                             <div class="collection-v2-product-info">
                                 <p>@product.CategoryName</p>

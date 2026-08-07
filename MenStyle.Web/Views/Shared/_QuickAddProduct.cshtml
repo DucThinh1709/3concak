@@ -1,0 +1,112 @@
+@model MenStyle.Web.Models.Product
+
+@{
+    var sizes = (Model.AvailableSizes ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
+
+    var colors = (Model.AvailableColors ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
+}
+
+<div class="quick-add-panel @(Model.StockQuantity <= 0 ? "is-out-of-stock" : "")"
+     data-quick-add-panel>
+    @if (Model.StockQuantity <= 0)
+    {
+        <div class="quick-add-sold-out">
+            Sản phẩm đã hết hàng
+        </div>
+    }
+    else
+    {
+        <form asp-controller="Cart"
+              asp-action="Add"
+              method="post"
+              data-quick-add-form
+              data-quick-add-url="@Url.Action("AddQuick", "Cart")">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="id" value="@Model.Id" />
+            <input type="hidden" name="quantity" value="1" />
+            <input type="hidden"
+                   name="returnUrl"
+                   value="@($"{Context.Request.Path}{Context.Request.QueryString}")" />
+
+            <button class="quick-add-toggle"
+                    type="button"
+                    data-quick-add-toggle
+                    aria-expanded="false">
+                <span>Thêm nhanh vào giỏ hàng</span>
+                <strong aria-hidden="true">＋</strong>
+            </button>
+
+            <div class="quick-add-options">
+                @if (sizes.Any())
+                {
+                    <fieldset class="quick-add-group">
+                        <legend>Chọn size</legend>
+
+                        <div class="quick-size-list">
+                            @for (var index = 0; index < sizes.Count; index++)
+                            {
+                                var size = sizes[index];
+                                var inputId = $"quick-size-{Model.Id}-{index}";
+
+                                <label for="@inputId">
+                                    <input id="@inputId"
+                                           type="radio"
+                                           name="selectedSize"
+                                           value="@size"
+                                           checked="@(index == 0)" />
+                                    <span>@size</span>
+                                </label>
+                            }
+                        </div>
+                    </fieldset>
+                }
+                else
+                {
+                    <input type="hidden" name="selectedSize" value="" />
+                }
+
+                @if (colors.Any())
+                {
+                    <fieldset class="quick-add-group">
+                        <legend>Chọn màu</legend>
+
+                        <div class="quick-color-list">
+                            @for (var index = 0; index < colors.Count; index++)
+                            {
+                                var color = colors[index];
+                                var inputId = $"quick-color-{Model.Id}-{index}";
+
+                                <label for="@inputId">
+                                    <input id="@inputId"
+                                           type="radio"
+                                           name="selectedColor"
+                                           value="@color"
+                                           checked="@(index == 0)" />
+                                    <span>@color</span>
+                                </label>
+                            }
+                        </div>
+                    </fieldset>
+                }
+                else
+                {
+                    <input type="hidden" name="selectedColor" value="" />
+                }
+
+                <button class="quick-add-submit" type="submit">
+                    Thêm 1 sản phẩm
+                </button>
+
+                <p class="quick-add-status"
+                   data-quick-add-status
+                   role="status"
+                   aria-live="polite"></p>
+            </div>
+        </form>
+    }
+</div>
